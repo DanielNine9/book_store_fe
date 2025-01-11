@@ -44,33 +44,20 @@ export const createBook = async (
   }
 };
 
-export const updateBook = async (
-  id: number,
-  title: string,
-  description: string,
-  authorId: number,
-  categoryIds: number[]
-) => {
+export const updateBook = async (id: string, data: any) => {
   try {
-    const response = await axiosInstance.put(`/books/${id}`, {
-      title,
-      description,
-      author_id: authorId,
-      categories: categoryIds,
-    });
+    const response = await axiosInstance.put(`/books/${id}`, data);
     return response.data;
   } catch (error) {
-    console.error("Error updating book:", error);
-    throw error;
+    throw new Error('Lỗi khi cập nhật sách!');
   }
 };
 
-export const deleteBook = async (id: number) => {
+export const deleteBook = async (id: string) => {
   try {
     const response = await axiosInstance.delete(`/books/${id}`);
     return response.data;
   } catch (error) {
-    console.error("Error deleting book:", error);
-    throw error;
+    throw new Error('Lỗi khi xóa sách!');
   }
 };

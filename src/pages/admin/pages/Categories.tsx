@@ -9,7 +9,7 @@ import { deleteCategory } from '../../../services/CategoryService';
 export function CategoriesContent() {   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);   
-  const [currentPage, setCurrentPage] = useState<number>(1); // Trang hiện tại   
+  const [currentPage, setCurrentPage] = useState<number>(1); 
   const [itemsPerPage, setItemsPerPage] = useState<number>(Number(import.meta.env.VITE_ITEMS_PER_PAGE)); // Số loại sách mỗi trang   
   const [categoryToEdit, setCategoryToEdit] = useState<any | null>(null); 
 
@@ -75,9 +75,12 @@ export function CategoriesContent() {
 
   // Calculate total pages based on the total number of items
   const totalPages = data?.total_items ? Math.ceil(data.total_items / itemsPerPage) : 0;
-  if(currentPage > totalPages){
-    setCurrentPage(totalPages)
-  }
+  useEffect(() => {
+    if(currentPage > totalPages){
+      setCurrentPage(1)
+    }
+  }, [totalPages])
+
 
   return (
     <div className="bg-white rounded-lg shadow">

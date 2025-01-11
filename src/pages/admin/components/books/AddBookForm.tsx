@@ -3,9 +3,10 @@ import { Library } from 'lucide-react';
 
 interface AddBookFormProps {
   onSubmit: (e: React.FormEvent) => void;
+  onClose: (e: React.FormEvent) => void;
 }
 
-export function AddBookForm({ onSubmit }: AddBookFormProps) {
+export function AddBookForm({ onSubmit, onClose }: AddBookFormProps) {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <div className="mx-auto w-fit">

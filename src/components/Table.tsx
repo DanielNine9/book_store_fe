@@ -57,7 +57,8 @@ export const Table: React.FC<TableProps> = ({ data, columns, loading, error }) =
             ) : error ? (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-4 text-center text-red-500">
-                  {error}
+                  {/* {error} */}
+                  Vui long reload lại.
                 </td>
               </tr>
             ) : (

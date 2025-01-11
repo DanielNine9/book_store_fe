@@ -1,55 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { Modal } from '../components/shared/Modal';
 import { AddBookForm } from '../components/books/AddBookForm';
 import { Table } from '../../../components/Table';
+import useBooksQuery from '../../../queries/BookQuery';
+import { getRandomColor } from '../../../utils/commonUtils';
 
 export function BooksContent() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [data, setData] = useState<any[]>([]); // Dữ liệu sách và người dùng
-  const [loading, setLoading] = useState<boolean>(false); // Trạng thái tải
-  const [error, setError] = useState<string | null>(null); // Lỗi khi gọi API
+  const [currentPage, setCurrentPage] = useState(1); // Current page state
+  const [itemsPerPage, setItemsPerPage] = useState(5); // Items per page state
 
-  const [currentPage, setCurrentPage] = useState<number>(1); // Trang hiện tại
-  const [itemsPerPage, setItemsPerPage] = useState<number>(5); // Số phần tử trên mỗi trang
-  const [totalItems, setTotalItems] = useState<number>(0); // Tổng số phần tử
+  // Use the `useBooksQuery` hook to fetch books data with pagination
+  const { data, isLoading, error } = useBooksQuery(
+    currentPage,
+    itemsPerPage,
+    '', // search term
+    'code', // search field
+    'OR' // search operator
+  );
 
-  // Lấy dữ liệu từ API cho cả Book và User
-  useEffect(() => {
-    setLoading(true);
-    setError(null); // Reset lỗi khi bắt đầu lấy dữ liệu
-    const getData = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/books/?page=${currentPage}&limit=${itemsPerPage}&search=&search_fields=username&search_operator=OR`
-        );
-        setData(response.data.books); // Cập nhật dữ liệu chung cho cả book và user
-        setTotalItems(response.data.total_items); // Cập nhật tổng số phần tử
-      } catch (error) {
-        setError('Lỗi khi tải dữ liệu!');
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Calculate total pages based on totalItems and itemsPerPage
+  const totalPages = Math.ceil(data?.total_items / itemsPerPage);
 
-    getData();
-  }, [currentPage, itemsPerPage]);
-
-  // Tính số lượng trang
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  // Cấu hình cột linh hoạt
+  // Define columns for the Table component
   const columns = [
     { label: 'Mã', field: 'code' },
-    { label: 'Tên', field: 'title' }, // Hiển thị tên
-    { label: 'Giá', field: 'price' }, // Hiển thị loại (Book/User)
-    { label: 'Tác giả', field: 'author.name' }, // Tên tác giả (nếu có)
-    { label: 'Thể loại', field: 'category.name' }, // Tên thể loại
+    { label: 'Tên', field: 'title' },
+    { label: 'Giá', field: 'price' },
+    { label: 'Tác giả', field: 'author.name' },
+    {
+      label: 'Thể loại',
+      field: 'categories',
+      render: (item: any) => (
+        <div  style={{ maxWidth: '300px', flexWrap: 'wrap', display: "flex" }}>
+          {item?.categories?.map((category : any) => (
+            <span
+              key={category.ID}
+              style={{
+                backgroundColor: getRandomColor(),
+                color: '#fff',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                margin: '2px',
+              }}
+            >
+              {category.name}
+            </span>
+          ))}
+        </div>
+      ),
+    },
     {
       label: 'Trạng thái',
-      field: 'active', // Trường dữ liệu
-      render: (item: any) => (item.active ? "Đang bán" : "Chưa bán"), // Hàm render tùy chỉnh
+      field: 'active',
+      render: (item: any) => (item.active ? 'Đang bán' : 'Chưa bán'),
     },
     {
       label: 'Thao tác',
@@ -62,25 +66,36 @@ export function BooksContent() {
       ),
     },
   ];
+  if(currentPage > totalPages){
+    setCurrentPage(totalPages)
+  }
 
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="p-6 border-b">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Danh sách</h2>
+          <h2 className="text-lg font-semibold">Danh sách sách</h2>
         </div>
       </div>
 
+      {/* Display error if exists */}
       {error && (
         <div className="p-4 bg-red-100 text-red-700 rounded-md mb-4">
-          {error}
+          Lỗi khi tải dữ liệu!
         </div>
       )}
 
-      {/* Sử dụng Table component */}
-      <Table data={data} columns={columns} loading={loading} error={error} />
+      {/* Show loading state while data is being fetched */}
+      {isLoading ? (
+        <div className="p-4 bg-gray-100 text-gray-700 rounded-md mb-4">
+          Đang tải dữ liệu...
+        </div>
+      ) : (
+        // Use the Table component to display book data
+        <Table data={data?.books} columns={columns} loading={isLoading} error={error} />
+      )}
 
-      {/* Các điều khiển phân trang */}
+      {/* Pagination controls */}
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center">
           <span className="mr-2">Hiển thị</span>
@@ -116,6 +131,11 @@ export function BooksContent() {
           </button>
         </div>
       </div>
+
+      {/* Modal for adding new book */}
+      <Modal title='Create Book' isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}>
+        <AddBookForm onSubmit={() => {}} onClose={() => setIsAddModalOpen(false)} />
+      </Modal>
     </div>
   );
 }

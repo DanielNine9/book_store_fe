@@ -75,6 +75,9 @@ export function CategoriesContent() {
 
   // Calculate total pages based on the total number of items
   const totalPages = data?.total_items ? Math.ceil(data.total_items / itemsPerPage) : 0;
+  if(currentPage > totalPages){
+    setCurrentPage(totalPages)
+  }
 
   return (
     <div className="bg-white rounded-lg shadow">

@@ -47,6 +47,7 @@ export function UsersContent() {
 
   // Cấu hình cột cho bảng
   const columns = [
+    { label: 'Mã', field: 'code' },
     { label: 'Người dùng', field: 'username' }, // Tên người dùng
     { label: 'Email', field: 'email' }, // Email người dùng
     { label: 'Vai trò', field: 'role' }, // Vai trò người dùng

@@ -41,6 +41,7 @@ export function BooksContent() {
 
   // Cấu hình cột linh hoạt
   const columns = [
+    { label: 'Mã', field: 'code' },
     { label: 'Tên', field: 'title' }, // Hiển thị tên
     { label: 'Giá', field: 'price' }, // Hiển thị loại (Book/User)
     { label: 'Tác giả', field: 'author.name' }, // Tên tác giả (nếu có)

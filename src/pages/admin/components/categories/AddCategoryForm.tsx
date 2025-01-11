@@ -54,12 +54,11 @@ export function AddCategoryForm({ onSubmit, categoryToEdit, onClose }: AddCatego
       console.log(data)
       if (response.status === 200) {
         console.log('Category saved:', data);
-        // Clear the form fields after successful submission
         setName('');
         setDescription('');
         setImage(null);
         setCurrentImageUrl(null);
-        onSubmit(e); // Trigger the parent callback
+        onSubmit(e);
       } else {
         console.error('Error saving category:', data);
       }
@@ -80,7 +79,6 @@ export function AddCategoryForm({ onSubmit, categoryToEdit, onClose }: AddCatego
       </div>
 
       <div className="space-y-4">
-        {/* Tên loại sách */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
             Tên loại sách
@@ -95,7 +93,6 @@ export function AddCategoryForm({ onSubmit, categoryToEdit, onClose }: AddCatego
           />
         </div>
 
-        {/* Mô tả loại sách */}
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700">
             Mô tả

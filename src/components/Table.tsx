@@ -37,7 +37,7 @@ export const Table: React.FC<TableProps> = ({ data, columns, loading, error }) =
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {columns.map((column) => (
+              {columns?.map((column) => (
                 <th
                   key={column.field}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -61,9 +61,9 @@ export const Table: React.FC<TableProps> = ({ data, columns, loading, error }) =
                 </td>
               </tr>
             ) : (
-              data.map((item, index) => (
+              data?.map((item, index) => (
                 <tr key={item.ID}>
-                  {columns.map((column) => (
+                  {columns?.map((column) => (
                     <td key={column.field} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {/* Nếu có hàm render thì dùng nó, nếu không thì lấy theo trường 'field' */}
                       {column.render

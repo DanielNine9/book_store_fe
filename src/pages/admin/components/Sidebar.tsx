@@ -40,6 +40,13 @@ export function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOp
           active={activeTab === 'books'}
           onClick={() => setActiveTab('books')}
         />
+          <MenuItem 
+          icon={<Library size={24} />}
+          text="Quản lý Tác Giả"
+          isOpen={isSidebarOpen}
+          active={activeTab === 'authors'}
+          onClick={() => setActiveTab('authors')}
+        />
         <MenuItem 
           icon={<Users size={24} />}
           text="Quản lý User"

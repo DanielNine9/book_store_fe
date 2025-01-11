@@ -6,6 +6,7 @@ import { BooksContent } from './pages/Books';
 import { UsersContent } from './pages/Users';
 import { TransactionsContent } from './pages/Transactions';
 import { CategoriesContent } from './pages/Categories';
+import { AuthorsContent } from './pages/Authors';
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -23,6 +24,8 @@ function AdminDashboard() {
         return <UsersContent />;
       case 'transactions':
         return <TransactionsContent />;
+      case 'authors':
+        return <AuthorsContent />;
       default:
         return <DashboardContent />;
     }

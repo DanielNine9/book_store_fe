@@ -1,65 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Modal } from '../components/shared/Modal';
-import { AddCategoryForm } from '../components/categories/AddCategoryForm'; // Giả sử bạn có form thêm loại sách
-import { Table } from '../../../components/Table'; // Import lại Table
+import React, { useState, useEffect } from 'react'; 
+import axios from 'axios'; 
+import { Modal } from '../components/shared/Modal'; 
+import { AddCategoryForm } from '../components/categories/AddCategoryForm'; 
+import { Table } from '../../../components/Table'; 
+import useCategoriesQuery from '../../../queries/CategoryQuery';  
+import { deleteCategory } from '../../../services/CategoryService';
 
-export function CategoriesContent() {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [data, setData] = useState<any[]>([]); // Dữ liệu loại sách
-  const [loading, setLoading] = useState<boolean>(false); // Trạng thái tải dữ liệu
-  const [error, setError] = useState<string | null>(null); // Lỗi khi gọi API
-  const [currentPage, setCurrentPage] = useState<number>(1); // Trang hiện tại
-  const [itemsPerPage, setItemsPerPage] = useState<number>(Number(import.meta.env.VITE_ITEMS_PER_PAGE)); // Số loại sách mỗi trang
-  const [totalItems, setTotalItems] = useState<number>(0); // Tổng số loại sách
+export function CategoriesContent() {   
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);   
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);   
+  const [currentPage, setCurrentPage] = useState<number>(1); // Trang hiện tại   
+  const [itemsPerPage, setItemsPerPage] = useState<number>(Number(import.meta.env.VITE_ITEMS_PER_PAGE)); // Số loại sách mỗi trang   
+  const [categoryToEdit, setCategoryToEdit] = useState<any | null>(null); 
 
-  // Lấy dữ liệu từ API
-  useEffect(() => {
-    setLoading(true);
-    setError(null); // Reset lỗi khi bắt đầu lấy dữ liệu
-    const getData = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/categories/?page=${currentPage}&limit=${itemsPerPage}`
-        );
-        setData(response.data.categories); // Cập nhật dữ liệu loại sách
-        setTotalItems(response.data.total_items); // Cập nhật tổng số loại sách
-      } catch (error) {
-        setError('Lỗi khi tải dữ liệu!');
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data, error, isLoading, refetch } = useCategoriesQuery(currentPage, itemsPerPage);
 
-    getData();
-  }, [currentPage, itemsPerPage]);
-
-  // Tính số lượng trang
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  // Hàm xử lý form thêm loại sách
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Xử lý logic thêm loại sách ở đây
-    setIsAddModalOpen(false);
+    try {
+      setIsAddModalOpen(false);
+      await refetch();  // Trigger refetch after adding the category
+    } catch (error) {
+      console.error("Error adding category:", error);
+      alert('Thêm không thành công');
+    }
+  };
+
+  // Hàm xử lý sửa loại sách
+  const handleEdit = (category: any) => {   
+    setCategoryToEdit(category);   
+    setIsEditModalOpen(true);  
+  };
+
+  // Hàm xử lý xóa loại sách
+  const handleDelete = async (categoryId: string) => {   
+    if (window.confirm('Bạn có chắc chắn muốn xóa loại sách này?')) {     
+      try {    
+        await deleteCategory(categoryId)   
+        // await axios.delete(`${import.meta.env.VITE_API_URL}/categories/${categoryId}`);       
+        alert('Đã xóa loại sách');
+        await refetch(); // Trigger refetch after deleting the category
+      } catch (error) {       
+        console.error('Lỗi khi xóa loại sách:', error);       
+        alert('Xóa không thành công');
+      }   
+    } 
   };
 
   // Cấu hình cột cho bảng
   const columns = [
-    { label: 'Tên loại sách', field: 'name' }, // Tên loại sách
-    { label: 'Mô tả', field: 'description' }, // Mô tả loại sách
-    {
-      label: 'Thao tác',
-      field: 'actions',
-      render: (item: any) => (
+    { label: 'Mã', field: 'code' },
+    { label: 'Tên loại sách', field: 'name' },
+    { label: 'Mô tả', field: 'description' },
+    { label: 'Hình ảnh', field: 'image_url', render: (item: any) => (
+        item.image_url ? (
+          <img src={item.image_url} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
+        ) : (
+          <span className="text-gray-500">Không có ảnh</span>
+        )
+      )
+    },
+    { label: 'Thao tác', field: 'actions', render: (item: any) => (
         <div className="flex items-center space-x-3">
-          <button className="text-indigo-600 hover:text-indigo-900">Sửa</button>
-          <button className="text-red-600 hover:text-red-900">Xóa</button>
+          <button onClick={() => handleEdit(item)} className="text-indigo-600 hover:text-indigo-900">
+            Sửa
+          </button>
+          <button onClick={() => handleDelete(item.ID)} className="text-red-600 hover:text-red-900">
+            Xóa
+          </button>
         </div>
       ),
     },
   ];
+
+  // Calculate total pages based on the total number of items
+  const totalPages = data?.total_items ? Math.ceil(data.total_items / itemsPerPage) : 0;
 
   return (
     <div className="bg-white rounded-lg shadow">
@@ -77,14 +92,13 @@ export function CategoriesContent() {
 
       {error && (
         <div className="p-4 bg-red-100 text-red-700 rounded-md mb-4">
-          {error}
+          {error.message}
         </div>
       )}
 
-      {/* Sử dụng lại Table component */}
-      <Table data={data} columns={columns} loading={loading} error={error} />
+      <Table data={data?.categories || []} columns={columns} loading={isLoading} error={error?.message as string} />
 
-      {/* Phân trang */}
+      {/* Pagination */}
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center">
           <span className="mr-2">Hiển thị</span>
@@ -109,7 +123,7 @@ export function CategoriesContent() {
             Trước
           </button>
           <span>
-            Trang {currentPage} / {totalPages}
+            Trang {data?.current_page} / {totalPages}
           </span>
           <button
             onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
@@ -127,7 +141,29 @@ export function CategoriesContent() {
         onClose={() => setIsAddModalOpen(false)}
         title="Thêm loại sách mới"
       >
-        <AddCategoryForm onSubmit={handleSubmit} />
+        <AddCategoryForm
+          onClose={() => setIsAddModalOpen(false)}
+          onSubmit={handleSubmit}
+        />
+      </Modal>
+
+      {/* Modal sửa loại sách */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Sửa loại sách"
+      >
+        {categoryToEdit && (
+          <AddCategoryForm
+            onClose={() => setIsEditModalOpen(false)}
+            onSubmit={async (e: React.FormEvent) => {
+              e.preventDefault();
+              setIsEditModalOpen(false);
+              await refetch();  // Trigger refetch after updating the category
+            }}
+            categoryToEdit={categoryToEdit}
+          />
+        )}
       </Modal>
     </div>
   );

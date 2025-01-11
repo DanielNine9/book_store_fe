@@ -1,79 +1,76 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { Table } from '../../../components/Table';
 
-// Định nghĩa kiểu dữ liệu cho một giao dịch (transaction)
 interface Transaction {
-  ID: number;
-  userName: string;
-  bookTitle: string;
-  borrowDate: string;
-  returnDate: string;
+  id: number;
+  user: {
+    username: string;
+  };
+  book: {
+    title: string;
+  };
+  totalAmount: number;
   status: string;
 }
 
 export function TransactionsContent() {
-  const [data, setData] = useState<Transaction[]>([]); // Dữ liệu giao dịch
-  const [loading, setLoading] = useState<boolean>(true); // Trạng thái loading
-  const [error, setError] = useState<string | null>(null); // Lỗi nếu có
-  const [currentPage, setCurrentPage] = useState<number>(1); // Trang hiện tại
-  const [itemsPerPage, setItemsPerPage] = useState<number>(10); // Số mục trên mỗi trang
+  const [data, setData] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [totalItems, setTotalItems] = useState<number>(0);
+  const [searchStatus, setSearchStatus] = useState<string>(''); // Trạng thái tìm kiếm
 
-  // Hàm gọi API để lấy dữ liệu
   useEffect(() => {
     const fetchTransactions = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        setLoading(true);
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/admin/transactions/?page=${currentPage}&limit=${itemsPerPage}`
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/admin/transactions?page=${currentPage}&limit=${itemsPerPage}&search=${searchStatus}&search_fields=status&search_operator=OR`
         );
-        const result = await response.json();
-        setData(result.data); // Giả sử kết quả trả về có thuộc tính 'data' chứa các giao dịch
+        setData(response.data.transactions);
+        setTotalItems(response.data.total_items);
       } catch (error) {
-        setError('Có lỗi xảy ra khi tải dữ liệu');
+        setError('Có lỗi xảy ra khi tải dữ liệu.');
+        console.error(error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchTransactions();
-  }, [currentPage, itemsPerPage]); // Chạy lại khi thay đổi trang hoặc số mục trên mỗi trang
+  }, [currentPage, itemsPerPage, searchStatus]);
 
-  // Cột của bảng
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
   const columns = [
-    {
-      label: 'ID Giao dịch',
-      field: 'ID',
-    },
-    {
-      label: 'Người mượn',
-      field: 'userName',
-    },
-    {
-      label: 'Sách',
-      field: 'bookTitle',
-    },
-    {
-      label: 'Ngày mượn',
-      field: 'borrowDate',
-    },
-    {
-      label: 'Hạn trả',
-      field: 'returnDate',
-    },
+    { label: 'Mã', field: 'code' },
+    { label: 'ID Giao dịch', field: 'ID' },
+    { label: 'Người dùng', field: 'user.username' },
+    // { label: 'Tồng số lượng', field: 'book.title' },
+    { label: 'Tổng tiền', field: 'total_amount' },
+    { label: 'Ngày giao dịch', field: 'transaction_time' },
     {
       label: 'Trạng thái',
       field: 'status',
       render: (data: Transaction) => (
         <span
           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-            data.status === 'Đã trả'
+            data.status === 'completed'
               ? 'bg-green-100 text-green-800'
-              : data.status === 'Đang mượn'
+              : data.status === 'pending'
               ? 'bg-yellow-100 text-yellow-800'
               : 'bg-red-100 text-red-800'
           }`}
         >
-          {data.status}
+          {data.status === 'completed'
+            ? 'Hoàn thành'
+            : data.status === 'pending'
+            ? 'Đang chờ'
+            : 'Thất bại'}
         </span>
       ),
     },
@@ -84,30 +81,78 @@ export function TransactionsContent() {
       <div className="p-6 border-b">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Lịch sử Giao dịch</h2>
-          <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+          <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
             Xuất báo cáo
           </button>
         </div>
       </div>
+
       <div className="p-6">
+        {error && (
+          <div className="p-4 bg-red-100 text-red-700 rounded-md mb-4">
+            {error}
+          </div>
+        )}
+
+        {/* Dropdown tìm kiếm */}
+        <div className="mb-4">
+          <label htmlFor="statusFilter" className="mr-2">
+            Tìm kiếm theo trạng thái:
+          </label>
+          <select
+            id="statusFilter"
+            value={searchStatus}
+            onChange={(e) => {
+              setSearchStatus(e.target.value);
+              setCurrentPage(1); // Reset về trang đầu tiên khi tìm kiếm
+            }}
+            className="px-3 py-2 border border-gray-300 rounded-md"
+          >
+            <option value="">Tất cả</option>
+            <option value="completed">Hoàn thành</option>
+            <option value="pending">Đang chờ</option>
+            <option value="failed">Thất bại</option>
+          </select>
+        </div>
+
         <Table data={data} columns={columns} loading={loading} error={error} />
       </div>
+
       <div className="p-6 border-t">
         <div className="flex justify-between items-center">
-          <button
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-          >
-            Trang trước
-          </button>
-          <span className="text-sm text-gray-700">Trang {currentPage}</span>
-          <button
-            onClick={() => setCurrentPage(currentPage + 1)}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-          >
-            Trang sau
-          </button>
+          <div className="flex items-center">
+            <span className="mr-2">Hiển thị</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className="px-3 py-2 border border-gray-300 rounded-md"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+            </select>
+            <span className="ml-2">mỗi trang</span>
+          </div>
+
+          <div className="flex items-center">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              className="px-3 py-2 border border-gray-300 rounded-md mr-2 disabled:opacity-50"
+              disabled={currentPage === 1}
+            >
+              Trang trước
+            </button>
+            <span>
+              Trang {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              className="px-3 py-2 border border-gray-300 rounded-md ml-2 disabled:opacity-50"
+              disabled={currentPage === totalPages}
+            >
+              Trang sau
+            </button>
+          </div>
         </div>
       </div>
     </div>

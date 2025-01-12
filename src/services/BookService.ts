@@ -1,3 +1,4 @@
+import { categories } from './../App';
 import axiosInstance from "../utils/axiosConfig";
 
 export const fetchBooks = async (
@@ -28,7 +29,9 @@ export const createBook = async (
   title: string,
   description: string,
   authorId: number,
-  categoryIds: number[]
+  categoryIds: number[],
+  price: string,
+  quantity: string
 ) => {
   try {
     const response = await axiosInstance.post("/books/", {
@@ -36,6 +39,8 @@ export const createBook = async (
       description,
       author_id: authorId,
       categories: categoryIds,
+      price: Number(price),
+      quantity: Number(quantity)
     });
     return response.data;
   } catch (error) {
@@ -45,8 +50,19 @@ export const createBook = async (
 };
 
 export const updateBook = async (id: string, data: any) => {
+  data.price = Number(data.price)
+  data.quantity = Number(data.quantity)
+  console.log(data);
+  
   try {
-    const response = await axiosInstance.put(`/books/${id}`, data);
+    const response = await axiosInstance.put(`/books/${id}`, {
+      title: data.title,
+      description: data.description,
+      author_id: data.author.ID,
+      categories: data.categories,
+      price: Number(data.price),
+      quantity: Number(data.quantity)
+    });
     return response.data;
   } catch (error) {
     throw new Error('Lỗi khi cập nhật sách!');

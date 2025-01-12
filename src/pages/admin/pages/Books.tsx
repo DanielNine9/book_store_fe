@@ -4,7 +4,11 @@ import { AddBookForm } from "../components/books/AddBookForm";
 import { Table } from "../../../components/Table";
 import useBooksQuery from "../../../queries/BookQuery";
 import { getRandomColor } from "../../../utils/commonUtils";
-import { updateBook, deleteBook } from "../../../services/BookService"; // import các hàm update và delete
+import {
+  updateBook,
+  deleteBook,
+  createBook,
+} from "../../../services/BookService"; // import các hàm update và delete
 import { ConfirmationModal } from "../../../components/ConfirmationModal";
 
 export function BooksContent() {
@@ -45,19 +49,20 @@ export function BooksContent() {
 
     try {
       await deleteBook(currentItemToDelete); // Xóa sách
-      await refetch()
+      await refetch();
       setIsDeleteModalOpen(false);
       setCurrentItemToDelete(null);
     } catch (error) {
       console.error("Xóa thất bại:", error);
     }
   };
-
+  console.log("data ", data);
   // Define columns for the Table component
   const columns = [
     { label: "Mã", field: "code" },
     { label: "Tên", field: "title" },
     { label: "Giá", field: "price" },
+    { label: "Số lượng", field: "quantity_in_stock" },
     { label: "Tác giả", field: "author.name" },
     {
       label: "Thể loại",
@@ -68,7 +73,8 @@ export function BooksContent() {
             <span
               key={category.ID}
               style={{
-                backgroundColor: getRandomColor(),
+                // backgroundColor: getRandomColor(),
+                backgroundColor: "black",
                 color: "#fff",
                 padding: "2px 8px",
                 borderRadius: "4px",
@@ -109,12 +115,12 @@ export function BooksContent() {
   ];
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentItemToDelete, setCurrentItemToDelete] = useState<any>(null);
-  const [itemType, setItemType] = useState(""); 
+  const [itemType, setItemType] = useState("");
   useEffect(() => {
-    if(currentPage > totalPages){
-      setCurrentPage(1)
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
     }
-  }, [totalPages])
+  }, [totalPages]);
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="p-6 border-b">
@@ -197,9 +203,15 @@ export function BooksContent() {
       >
         {/* AddBookForm có thể được sửa đổi để nhận và hiển thị thông tin sách để chỉnh sửa */}
         <AddBookForm
-          onSubmit={(updatedData) => {
-            updateBook(currentBook?.code, updatedData);
-            setIsEditModalOpen(false);
+          onSubmit={async (e, updatedData) => {
+            try {
+              console.log("updatedData ", updatedData);
+              await updateBook(currentBook?.ID, updatedData);
+              setIsEditModalOpen(false);
+              await refetch();
+            } catch (error) {
+              console.error("Error updating book:", error);
+            }
           }}
           onClose={() => setIsEditModalOpen(false)}
           book={currentBook} // Truyền thông tin sách cần sửa
@@ -213,12 +225,29 @@ export function BooksContent() {
       />
       {/* Modal for adding new book */}
       <Modal
-        title="Create Book"
+        title="Thêm sách"
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
       >
         <AddBookForm
-          onSubmit={() => {}}
+          onSubmit={async (e, formData) => {
+            // Call createBook here with the formData
+            console.log("data2", formData);
+            try {
+              await createBook(
+                formData.title,
+                formData.description,
+                formData.author.ID,
+                formData.categories,
+                formData.price,
+                formData.quantity
+              );
+              setIsAddModalOpen(false); // Close the modal after success
+              await refetch(); // Refetch books to update the list
+            } catch (error) {
+              console.error("Error creating book:", error);
+            }
+          }}
           onClose={() => setIsAddModalOpen(false)}
         />
       </Modal>

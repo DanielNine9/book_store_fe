@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchAuthors } from '../services/AuthorService';
 
-const useBooksQuery = (
+const useAuthorsQuery = (
   currentPage: number,
   itemsPerPage: number,
   search: string = '',
@@ -18,4 +18,4 @@ const useBooksQuery = (
   });
 };
 
-export default useBooksQuery;
+export default useAuthorsQuery;

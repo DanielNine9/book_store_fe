@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Table } from '../../../components/Table';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Table } from "../../../components/Table";
+import useCategoriesQuery from "../../../queries/CategoryQuery";
+import useTransactionsQuery from "../../../queries/TransactionQuery";
 
 interface Transaction {
   id: number;
@@ -15,62 +17,56 @@ interface Transaction {
 }
 
 export function TransactionsContent() {
-  const [data, setData] = useState<Transaction[]>([]);
+  // const [data, setData] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [totalItems, setTotalItems] = useState<number>(0);
-  const [searchStatus, setSearchStatus] = useState<string>(''); // Trạng thái tìm kiếm
+  const [searchStatus, setSearchStatus] = useState<string>(""); // Trạng thái tìm kiếm
 
+  const { data, error, isLoading, refetch } = useTransactionsQuery(
+    currentPage,
+    itemsPerPage, 
+    searchStatus,
+    "status"
+  );
+
+  const totalPages = data?.total_items
+    ? Math.ceil(data.total_items / itemsPerPage)
+    : 0;
   useEffect(() => {
-    const fetchTransactions = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/admin/transactions?page=${currentPage}&limit=${itemsPerPage}&search=${searchStatus}&search_fields=status&search_operator=OR`
-        );
-        setData(response.data.transactions);
-        setTotalItems(response.data.total_items);
-      } catch (error) {
-        setError('Có lỗi xảy ra khi tải dữ liệu.');
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages]);
 
-    fetchTransactions();
-  }, [currentPage, itemsPerPage, searchStatus]);
-
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const columns = [
-    { label: 'Mã', field: 'code' },
-    { label: 'ID Giao dịch', field: 'ID' },
-    { label: 'Người dùng', field: 'user.username' },
+    { label: "Mã", field: "code" },
+    { label: "ID Giao dịch", field: "ID" },
+    { label: "Người dùng", field: "user.username" },
     // { label: 'Tồng số lượng', field: 'book.title' },
-    { label: 'Tổng tiền', field: 'total_amount' },
-    { label: 'Ngày giao dịch', field: 'transaction_time' },
+    { label: "Tổng tiền", field: "total_amount" },
+    { label: "Ngày giao dịch", field: "transaction_time" },
     {
-      label: 'Trạng thái',
-      field: 'status',
+      label: "Trạng thái",
+      field: "status",
       render: (data: Transaction) => (
         <span
           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-            data.status === 'completed'
-              ? 'bg-green-100 text-green-800'
-              : data.status === 'pending'
-              ? 'bg-yellow-100 text-yellow-800'
-              : 'bg-red-100 text-red-800'
+            data.status === "completed"
+              ? "bg-green-100 text-green-800"
+              : data.status === "pending"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
           }`}
         >
-          {data.status === 'completed'
-            ? 'Hoàn thành'
-            : data.status === 'pending'
-            ? 'Đang chờ'
-            : 'Thất bại'}
+          {data.status === "completed"
+            ? "Hoàn thành"
+            : data.status === "pending"
+            ? "Đang chờ"
+            : "Thất bại"}
         </span>
       ),
     },
@@ -88,12 +84,6 @@ export function TransactionsContent() {
       </div>
 
       <div className="p-6">
-        {error && (
-          <div className="p-4 bg-red-100 text-red-700 rounded-md mb-4">
-            {error}
-          </div>
-        )}
-
         {/* Dropdown tìm kiếm */}
         <div className="mb-4">
           <label htmlFor="statusFilter" className="mr-2">
@@ -115,7 +105,12 @@ export function TransactionsContent() {
           </select>
         </div>
 
-        <Table data={data} columns={columns} loading={loading} error={error} />
+        <Table
+          data={data?.transactions || []}
+          columns={columns}
+          loading={loading}
+          error={error?.message as string}
+        />
       </div>
 
       <div className="p-6 border-t">
@@ -146,7 +141,9 @@ export function TransactionsContent() {
               Trang {currentPage} / {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               className="px-3 py-2 border border-gray-300 rounded-md ml-2 disabled:opacity-50"
               disabled={currentPage === totalPages}
             >

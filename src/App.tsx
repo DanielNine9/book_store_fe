@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { BookCard } from './components/BookCard';
-import { Cart } from './components/Cart';
+// import { Cart } from './components/Cart';
 import { Wishlist } from './components/Wishlist';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { LoginForm } from './pages/auth/LoginForm';
@@ -39,7 +39,7 @@ function App() {
           element={
             <div className="min-h-screen bg-gray-50">
             <Header onCartClick={() => setIsCartOpen(true)} onWishlistClick={() => setIsWishlistOpen(true)} />
-            <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+            {/* <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} /> */}
             <Wishlist isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} />
       
             {/* Hero Section */}

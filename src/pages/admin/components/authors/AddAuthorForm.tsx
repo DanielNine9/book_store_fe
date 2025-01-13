@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Tag } from 'lucide-react';
 import { createAuthor, updateAuthor } from '../../../../services/AuthorService'; // Replace with appropriate service
+import { useForm, Controller } from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { TextField, Button, CircularProgress } from '@mui/material';
 
 interface AddAuthorFormProps {
   onSubmit: (e: React.FormEvent) => void;
@@ -8,29 +12,37 @@ interface AddAuthorFormProps {
   authorToEdit?: any; // Optional prop for editing author data
 }
 
+const validationSchema = yup.object().shape({
+  name: yup.string().required("Tên tác giả là bắt buộc"),
+  bio: yup.string().required("Tiểu sử là bắt buộc"),
+  // image: yup.mixed().nullable(),
+});
+
 export function AddAuthorForm({ onSubmit, authorToEdit, onClose }: AddAuthorFormProps) {
-  const [name, setName] = useState('');
-  const [bio, setbio] = useState('');
   const [image, setImage] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null); // Store current image URL
+
+  // Initialize form with React Hook Form
+  const { control, handleSubmit, formState: { errors }, reset } = useForm({
+    resolver: yupResolver(validationSchema),
+    defaultValues: {
+      name: authorToEdit?.name || '',
+      bio: authorToEdit?.bio || '',
+      // image: authorToEdit?.image_url || null, // For editing
+    },
+  });
 
   // Update the form when there's data in authorToEdit (for editing)
   useEffect(() => {
     if (authorToEdit) {
-      setName(authorToEdit.name);
-      setbio(authorToEdit.bio);
-      setCurrentImageUrl(authorToEdit.image_url); // Set current image URL
+      setCurrentImageUrl(authorToEdit.image_url); // Set current image URL for editing
     }
   }, [authorToEdit]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+  const onFormSubmit = async (data: any) => {
     const formData = new FormData();
-    formData.append('name', name);
-    formData.append('bio', bio);
+    formData.append('name', data.name);
+    formData.append('bio', data.bio);
     if (image) {
       formData.append('image', image); // Append image if provided
     }
@@ -42,35 +54,32 @@ export function AddAuthorForm({ onSubmit, authorToEdit, onClose }: AddAuthorForm
         // Update the author if editing
         response = await updateAuthor({
           id: authorToEdit.ID,
-          name,
-          bio,
+          name: data.name,
+          bio: data.bio,
           image,
         });
       } else {
         // Create a new author if adding
-        response = await createAuthor({name, bio, image});
+        response = await createAuthor({ name: data.name, bio: data.bio, image });
       }
 
-      const data = response.data;
+      const responseData = response.data;
       if (response?.data?.ID) {
-        console.log('Author saved:', data);
-        setName('');
-        setbio('');
+        console.log('Author saved:', responseData);
+        reset();
         setImage(null);
         setCurrentImageUrl(null);
-        onSubmit(e); // Trigger onSubmit after the form is saved
+        onSubmit(data); // Trigger onSubmit after the form is saved
       } else {
-        console.error('Error saving author:', data);
+        console.error('Error saving author:', responseData);
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
       <div className="mx-auto w-fit">
         <div className="rounded-full bg-indigo-100 p-3">
           <Tag className="h-6 w-6 text-indigo-600" />
@@ -78,54 +87,68 @@ export function AddAuthorForm({ onSubmit, authorToEdit, onClose }: AddAuthorForm
       </div>
 
       <div className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Tên tác giả
-          </label>
-          <input
-            type="text"
-            id="name"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
+        {/* Author Name */}
+        <Controller
+          name="name"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Tên tác giả"
+              variant="standard"
+              fullWidth
+              error={!!errors.name}
+              helperText={errors.name?.message as string}
+            />
+          )}
+        />
 
-        <div>
-          <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
-            Tiểu sử
-          </label>
-          <textarea
-            id="bio"
-            rows={4}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            required
-            value={bio}
-            onChange={(e) => setbio(e.target.value)}
-          />
-        </div>
+        {/* Author Bio */}
+        <Controller
+          name="bio"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Tiểu sử"
+              variant="standard"
+              multiline
+              rows={4}
+              fullWidth
+              error={!!errors.bio}
+              helperText={errors.bio?.message as string}
+            />
+          )}
+        />
 
         {/* Image Upload */}
-        <div>
-          <label htmlFor="image" className="block text-sm font-medium text-gray-700">
-            Hình ảnh (Tùy chọn)
-          </label>
-          <input
-            type="file"
-            id="image"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-            accept="image/*"
-            onChange={(e) => {
-              if (e.target.files) {
-                setImage(e.target.files[0]);
-              }
-            }}
-          />
-        </div>
+        {/* <Controller
+          name="image"
+          control={control}
+          render={({ field }) => (
+            <>
+              <label htmlFor="image" className="block text-sm font-medium text-gray-700">
+                Hình ảnh (Tùy chọn)
+              </label>
+              <input
+                {...field}
+                type="file"
+                id="image"
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files) {
+                    setImage(e.target.files[0]);
+                    field.onChange(e.target.files[0]);
+                  }
+                }}
+              />
+            </>
+          )}
+        /> */}
 
         {/* Display selected or current image */}
-        <div className="mt-4">
+        {/* <div className="mt-4">
           {image ? (
             <div>
               <label className="block text-sm font-medium text-gray-700">Ảnh đã chọn</label>
@@ -147,24 +170,25 @@ export function AddAuthorForm({ onSubmit, authorToEdit, onClose }: AddAuthorForm
           ) : (
             <p className="text-sm text-gray-500">Chưa có ảnh</p>
           )}
-        </div>
+        </div> */}
       </div>
 
       <div className="flex justify-end space-x-3">
-        <button
+        <Button
           onClick={onClose}
-          type="button"
-          className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          variant="outlined"
+          className="text-sm font-medium text-gray-700"
         >
           Hủy
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-          disabled={isSubmitting}
+          variant="contained"
+          color="primary"
+          disabled={false} // Set to `true` if there's any loading state
         >
-          {isSubmitting ? 'Đang lưu tác giả...' : authorToEdit ? 'Cập nhật tác giả' : 'Thêm tác giả'}
-        </button>
+          {authorToEdit ? 'Cập nhật tác giả' : 'Thêm tác giả'}
+        </Button>
       </div>
     </form>
   );

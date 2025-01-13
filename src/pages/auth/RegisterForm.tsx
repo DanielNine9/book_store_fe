@@ -106,13 +106,13 @@ export function RegisterForm() {
           {/* Các nút điều hướng */}
           <div className="mt-6 flex justify-between">
             <button
-              onClick={() => navigate('/login')} // Chuyển hướng đến trang đăng nhập
+              onClick={() => navigate('/login')} 
               className="text-indigo-600 hover:text-indigo-500 text-sm"
             >
               Đã có tài khoản? Đăng nhập
             </button>
             <button
-              onClick={() => navigate('/')} // Chuyển hướng về trang chủ
+              onClick={() => navigate('/')} 
               className="text-indigo-600 hover:text-indigo-500 text-sm"
             >
               Về trang chủ

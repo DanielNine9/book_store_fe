@@ -1,5 +1,5 @@
-import React from 'react';
-import { BookOpen, Search, Heart, ShoppingCart } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, Search, Heart, ShoppingCart, ChevronDown } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useWishlist } from '../hooks/useWishlist';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
@@ -12,7 +12,18 @@ interface HeaderProps {
 export function Header({ onCartClick, onWishlistClick }: HeaderProps) {
   const { cartItems } = useCart();
   const { wishlistItems } = useWishlist();
-  const navigate = useNavigate(); // Khởi tạo navigate
+  const navigate = useNavigate(); 
+
+  const token = localStorage.getItem('token'); 
+  const username = JSON.parse(localStorage.getItem('user') || '{}')?.username;
+
+  const [isDropdownOpen, setDropdownOpen] = useState(false);  // State to handle dropdown visibility
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -64,12 +75,46 @@ export function Header({ onCartClick, onWishlistClick }: HeaderProps) {
                 </span>
               )}
             </button>
-            <button 
-              onClick={() => navigate("/login")} // Dùng useNavigate để chuyển hướng
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
-            >
-              Đăng nhập
-            </button>
+
+            {token ? (  // Check if user is logged in
+              <div className="relative">
+                <div
+                  onClick={() => setDropdownOpen(!isDropdownOpen)}  // Toggle dropdown visibility
+                  className="flex hover-cursor"
+                >
+                  {username} 
+                </div>
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-10">
+                    <ul className="py-1 text-gray-700">
+                      <li>
+                        <button
+                          onClick={() => navigate('/profile')}
+                          className="block px-4 py-2 text-sm hover:bg-gray-100 w-full text-left"
+                        >
+                          Profile
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          onClick={handleLogout}
+                          className="block px-4 py-2 text-sm hover:bg-gray-100 w-full text-left"
+                        >
+                          Đăng xuất
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button 
+                onClick={() => navigate("/login")} // Dùng useNavigate để chuyển hướng
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+              >
+                Đăng nhập
+              </button>
+            )}
           </div>
         </div>
       </div>

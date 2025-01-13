@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Library } from "lucide-react";
 import {
   Autocomplete,
   TextField,
   CircularProgress,
-  InputAdornment,
-  TextareaAutosize,
 } from "@mui/material";
+import { useForm, Controller } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 import useAuthorsQuery from "../../../../queries/AuthorQuery";
 import useCategoriesQuery from "../../../../queries/CategoryQuery";
 
@@ -25,53 +26,63 @@ interface Category {
   id: string;
   name: string;
 }
-// In AddBookForm component
+
+// Define validation schema using yup
+const validationSchema = yup.object().shape({
+  title: yup.string().required("Tên sách là bắt buộc"),
+  price: yup
+    .number()
+    .required("Giá sách là bắt buộc")
+    .positive("Giá sách phải là số dương")
+    .typeError("Giá sách phải là số"),
+  quantity: yup
+    .number()
+    .required("Số lượng là bắt buộc")
+    .min(1, "Số lượng phải lớn hơn 0")
+    .typeError("Số lượng phải là số"),
+  author: yup.object().required("Cần chọn một tác giả"), // Single author validation
+  category: yup.array().min(1, "Cần chọn ít nhất một thể loại"),
+  description: yup.string().optional(),
+});
+
 export function AddBookForm({ onSubmit, onClose, book }: AddBookFormProps) {
-  const [formData, setFormData] = useState({
-    title: book?.title || "",
-    author: book?.author || [],
-    category: book?.categories || [],
-    description: book?.description || "",
-    price: book?.price || 0,
-    quantity: book?.quantity_in_stock || 0,
-  });
-
-  const [authorSearch, setAuthorSearch] = useState("");
-  const [categorySearch, setCategorySearch] = useState("");
-
-  // Fetch authors and categories based on search input
   const { data: authorsData, isLoading: isAuthorsLoading } = useAuthorsQuery(
     1,
     100,
-    authorSearch
+    ""
   );
   const { data: categoriesData, isLoading: isCategoriesLoading } =
-    useCategoriesQuery(1, 100, categorySearch);
+    useCategoriesQuery(1, 100, "");
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    getValues,
+  } = useForm({
+    resolver: yupResolver(validationSchema),
+    defaultValues: {
+      title: book?.title || "",
+      author: book?.author || null, // Single author as null
+      category: book?.categories || [],
+      description: book?.description || "",
+      price: book?.price || 0,
+      quantity: book?.quantity_in_stock || 0,
+    },
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle form submission
+  const onFormSubmit = (e) => {
+    const data = getValues();
     onSubmit(e, {
-      ...formData,
-      categories: formData?.category?.map((item: any) => item.ID),
-    }); // Call the onSubmit passed from BooksContent
+      ...data,
+      categories: data?.category?.map((item: any) => item.ID),
+    });
   };
-
-  // Ensure options is always an array to prevent errors
-  const authorOptions = authorsData?.authors || [];
-  const categoryOptions = categoriesData?.categories || [];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
       <div className="mx-auto w-fit">
         <div className="rounded-full bg-indigo-100 p-3">
           <Library className="h-6 w-6 text-indigo-600" />
@@ -81,110 +92,137 @@ export function AddBookForm({ onSubmit, onClose, book }: AddBookFormProps) {
       <div className="space-y-4">
         {/* Title */}
         <div className="d-flex gap-2" style={{ display: "flex" }}>
-          <TextField
-            id="title"
-            label="Tên sách"
-            variant="standard"
+          <Controller
             name="title"
-            value={formData.title}
-            onChange={handleChange}
-            className="flex-1"
-            style={{ width: "100%" }}
-          />
-          <TextField
-            id="price"
-            label="Giá sách"
-            variant="standard"
-            name="price"
-            onChange={handleChange}
-            value={formData.price}
-            type="number"
-            className="flex-1"
-            style={{ width: "100%" }}
-          />
-        </div>
-        <div className="d-flex gap-2" style={{ display: "flex" }}>
-          <Autocomplete
-            // multiple
-            id="author"
-            options={authorOptions}
-            getOptionLabel={(option) => option.name || ""}
-            value={formData.author}
-            onChange={(_, newValue) => {
-              console.log("newValue ", newValue);
-              setFormData({ ...formData, author: newValue });
-            }}
-            className="flex-1"
-            style={{ width: "100%" }}
-            loading={isAuthorsLoading}
-            renderInput={(params) => (
+            control={control}
+            render={({ field }) => (
               <TextField
-                {...params}
+                {...field}
+                label="Tên sách"
                 variant="standard"
-                label="Tác giả"
-                placeholder="Tìm kiếm tác giả"
-                InputProps={{
-                  ...params.InputProps,
-                  endAdornment: isAuthorsLoading ? (
-                    <CircularProgress color="inherit" size={24} />
-                  ) : null,
-                }}
+                error={!!errors.title}
+                helperText={errors.title?.message}
+                className="flex-1"
+                fullWidth
               />
             )}
           />
-          <TextField
-            id="quantity"
-            label="Số lượng"
-            variant="standard"
-            name="quantity"
-            onChange={handleChange}
-            value={formData.quantity}
-            type="number"
-            className="flex-1"
-            style={{ width: "100%" }}
+          <Controller
+            name="price"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Giá sách"
+                variant="standard"
+                error={!!errors.price}
+                helperText={errors.price?.message}
+                type="number"
+                className="flex-1"
+                fullWidth
+              />
+            )}
           />
         </div>
 
-        {/* Author Search */}
+        <div className="d-flex gap-2" style={{ display: "flex" }}>
+          {/* Author Search */}
+          <Controller
+            name="author"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                {...field}
+                className="flex-1"
+                options={authorsData?.authors || []}
+                getOptionLabel={(option) => option.name || ""}
+                onChange={(_, newValue) => field.onChange(newValue)}
+                loading={isAuthorsLoading}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    variant="standard"
+                    label="Tác giả"
+                    placeholder="Tìm kiếm tác giả"
+                    error={!!errors.author}
+                    helperText={errors.author?.message}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: isAuthorsLoading ? (
+                        <CircularProgress color="inherit" size={24} />
+                      ) : null,
+                    }}
+                  />
+                )}
+              />
+            )}
+          />
+          <Controller
+            name="quantity"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Số lượng"
+                variant="standard"
+                type="number"
+                error={!!errors.quantity}
+                helperText={errors.quantity?.message}
+                className="flex-1"
+                fullWidth
+              />
+            )}
+          />
+        </div>
 
         {/* Category Search */}
-        <Autocomplete
-          multiple
-          id="category"
-          options={categoryOptions}
-          getOptionLabel={(option) => option.name}
-          value={formData.category}
-          onChange={(_, newValue) =>
-            setFormData({ ...formData, category: newValue })
-          }
-          loading={isCategoriesLoading}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="standard"
-              label="Thể loại"
-              placeholder="Tìm kiếm thể loại"
-              InputProps={{
-                ...params.InputProps,
-                endAdornment: isCategoriesLoading ? (
-                  <CircularProgress color="inherit" size={24} />
-                ) : null,
-              }}
+        <Controller
+          name="category"
+          control={control}
+          render={({ field }) => (
+            <Autocomplete
+              {...field}
+              multiple
+              options={categoriesData?.categories || []}
+              getOptionLabel={(option) => option.name}
+              onChange={(_, newValue) => field.onChange(newValue)}
+              loading={isCategoriesLoading}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="standard"
+                  label="Thể loại"
+                  placeholder="Tìm kiếm thể loại"
+                  error={!!errors.category}
+                  helperText={errors.category?.message}
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: isCategoriesLoading ? (
+                      <CircularProgress color="inherit" size={24} />
+                    ) : null,
+                  }}
+                />
+              )}
             />
           )}
         />
 
         {/* Description */}
-        <TextField
-          id="description"
-          label="Mô tả"
-          multiline
-          rows={4}
-          variant="standard"
+        <Controller
           name="description"
-          value={formData.description}
-          onChange={handleChange}
-          style={{ width: "100%" }}
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Mô tả"
+              multiline
+              rows={4}
+              variant="standard"
+              error={!!errors.description}
+              helperText={errors.description?.message}
+              fullWidth
+            />
+          )}
         />
       </div>
 

@@ -13,11 +13,11 @@ import { ConfirmationModal } from "../../../components/ConfirmationModal";
 
 export function BooksContent() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Trạng thái modal sửa
-  const [currentBook, setCurrentBook] = useState<any>(null); // Dữ liệu sách hiện tại khi sửa
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); 
+  const [currentBook, setCurrentBook] = useState<any>(null); 
 
-  const [currentPage, setCurrentPage] = useState(1); // Current page state
-  const [itemsPerPage, setItemsPerPage] = useState(5); // Items per page state
+  const [currentPage, setCurrentPage] = useState(1); 
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // Use the `useBooksQuery` hook to fetch books data with pagination
   const { data, isLoading, error, refetch } = useBooksQuery(

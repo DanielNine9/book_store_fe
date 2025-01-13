@@ -1,30 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { BookCard } from '../../components/BookCard';
 import axios from 'axios';
+import useBooksQuery from '../../queries/BookQuery';
 
 const BookSection = () => {
   const [books, setBooks] = useState([]);
   const [priceRange, setPriceRange] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
-  const [currentPage, setCurrentPage] = useState(1);
 
+
+  const { data, isLoading, error, refetch } = useBooksQuery(
+    1,
+    8,
+  
+  );
   // Function to fetch books from the API
-  const fetchBooks = async () => {
-    try {
-      const response = await axios.get(
-        `http://localhost:8080/books/?page=1&limit=5&search=g&search_fields=&search_operator=OR`, 
+  // const fetchBooks = async () => {
+  //   try {
+  //     const response = await axios.get(
+  //       `http://localhost:8080/books/?page=1&limit=5&search=g&search_fields=&search_operator=OR`, 
        
-      );
-      setBooks(response.data.books);
-    } catch (error) {
-      console.error('Error fetching books:', error);
-    }
-  };
+  //     );
+  //     setBooks(response.data.books);
+  //   } catch (error) {
+  //     console.error('Error fetching books:', error);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchBooks();
-  }, [priceRange, selectedCategory, sortBy, currentPage]);
+  // useEffect(() => {
+  //   fetchBooks();
+  // }, [priceRange, selectedCategory, sortBy, currentPage]);
 
   return (
     <div>
@@ -55,7 +61,7 @@ const BookSection = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {books.length > 0 && books?.map((book) => (
+          {data?.books && data?.books.length > 0 && data.books?.map((book) => (
             <BookCard key={book.id} book={book} />
           ))}
         </div>

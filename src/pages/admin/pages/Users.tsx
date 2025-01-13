@@ -2,55 +2,29 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Modal } from '../components/shared/Modal';
 import { AddUserForm } from '../components/users/AddUserForm';
-import { Table } from '../../../components/Table'; // Import lại Table
+import { Table } from '../../../components/Table';
+import useUsersQuery from '../../../queries/UserQuery';
 
 export function UsersContent() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [data, setData] = useState<any[]>([]); // Dữ liệu người dùng
-  const [loading, setLoading] = useState<boolean>(false); // Trạng thái tải dữ liệu
-  const [error, setError] = useState<string | null>(null); // Lỗi khi gọi API
-  const [currentPage, setCurrentPage] = useState<number>(1); // Trang hiện tại
-  const [itemsPerPage, setItemsPerPage] = useState<number>(Number(import.meta.env.VITE_ITEMS_PER_PAGE)); // Số người dùng mỗi trang, lấy từ biến môi trường
-  const [totalItems, setTotalItems] = useState<number>(0); // Tổng số người dùng
+  const [currentPage, setCurrentPage] = useState<number>(1); 
+  const [itemsPerPage, setItemsPerPage] = useState<number>(Number(import.meta.env.VITE_ITEMS_PER_PAGE)); 
+  const { data, error, isLoading, refetch } = useUsersQuery(currentPage, itemsPerPage);
 
-  // Lấy dữ liệu từ API
+  const totalPages = data?.total_items
+    ? Math.ceil(data.total_items / itemsPerPage)
+    : 0;
   useEffect(() => {
-    setLoading(true);
-    setError(null); // Reset lỗi khi bắt đầu lấy dữ liệu
-    const getData = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/users/?page=${currentPage}&limit=${itemsPerPage}&search=&search_fields=username&search_operator=OR`
-        );
-        setData(response.data.users); // Cập nhật dữ liệu người dùng
-        setTotalItems(response.data.total_items); // Cập nhật tổng số người dùng
-      } catch (error) {
-        setError('Lỗi khi tải dữ liệu!');
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages]);
 
-    getData();
-  }, [currentPage, itemsPerPage]);
-
-  // Tính số lượng trang
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  // Hàm xử lý form thêm người dùng
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Xử lý logic thêm người dùng ở đây
-    setIsAddModalOpen(false);
-  };
-
-  // Cấu hình cột cho bảng
   const columns = [
     { label: 'Mã', field: 'code' },
-    { label: 'Người dùng', field: 'username' }, // Tên người dùng
-    { label: 'Email', field: 'email' }, // Email người dùng
-    { label: 'Vai trò', field: 'role' }, // Vai trò người dùng
+    { label: 'Người dùng', field: 'username' },
+    { label: 'Email', field: 'email' }, 
+    { label: 'Vai trò', field: 'role' },
     {
       label: 'Trạng thái',
       field: 'active',
@@ -76,6 +50,11 @@ export function UsersContent() {
     },
   ];
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAddModalOpen(false);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="p-6 border-b">
@@ -90,16 +69,9 @@ export function UsersContent() {
         </div>
       </div>
 
-      {error && (
-        <div className="p-4 bg-red-100 text-red-700 rounded-md mb-4">
-          {error}
-        </div>
-      )}
+      
+      <Table data={data?.users || []} columns={columns} loading={isLoading} error={error?.message as string} />
 
-      {/* Sử dụng lại Table component */}
-      <Table data={data} columns={columns} loading={loading} error={error} />
-
-      {/* Phân trang */}
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center">
           <span className="mr-2">Hiển thị</span>

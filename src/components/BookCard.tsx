@@ -23,13 +23,13 @@ export function BookCard({ book, onViewDetail }: BookCardProps) {
   };
 
   // Nếu không có trường hình ảnh, sẽ sử dụng ảnh mặc định
-  const bookImage = book.image_url || 'path/to/default-image.jpg'; // Thêm đường dẫn ảnh mặc định
+  const bookImage = book.categories?.[0]?.image_url || 'path/to/default-image.jpg'; // Sử dụng hình ảnh từ danh mục
 
   return (
     <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="relative">
         <img 
-          src={bookImage} // Lấy hình ảnh từ book.image_url hoặc ảnh mặc định
+          src={bookImage} // Lấy hình ảnh từ danh mục đầu tiên hoặc ảnh mặc định
           alt={book.title} 
           className="w-full h-64 object-cover rounded-t-lg cursor-pointer"
           onClick={() => onViewDetail(book)}
@@ -44,16 +44,20 @@ export function BookCard({ book, onViewDetail }: BookCardProps) {
         </button>
       </div>
       <div className="p-4">
-        <span className="text-sm text-indigo-600 font-medium">{book.category.name}</span> {/* Lấy tên danh mục */}
+        <span className="text-sm text-indigo-600 font-medium">{book.categories?.[0]?.name}</span> 
+        
         <h3 
           className="font-semibold text-lg mb-2 cursor-pointer hover:text-indigo-600"
           onClick={() => onViewDetail(book)}
         >
           {book.title}
         </h3>
-        <p className="text-gray-600 mb-2">{book.author.name}</p> {/* Lấy tên tác giả */}
+
+        <p className="text-gray-600 mb-2">{book.author?.name}</p> 
+
         <div className="flex items-center justify-between">
-          <span className="text-indigo-600 font-bold">{book.price}</span>
+          <span className="text-indigo-600 font-bold">{book.price ? `${book.price} VND` : 'Miễn phí'}</span>
+          
           <button 
             className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
             onClick={() => addToCart(book)}

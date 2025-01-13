@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 export function RegisterForm() {
   const [email, setEmail] = useState('');
@@ -7,6 +8,7 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const { signUp } = useAuth();
+  const navigate = useNavigate(); // Khởi tạo navigate
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,6 +18,8 @@ export function RegisterForm() {
     }
     try {
       await signUp(email, password, 'customer');
+      // Nếu đăng ký thành công, chuyển hướng đến trang đăng nhập
+      navigate('/login');
     } catch (err) {
       setError('Error creating account');
     }
@@ -98,6 +102,22 @@ export function RegisterForm() {
               </button>
             </div>
           </form>
+
+          {/* Các nút điều hướng */}
+          <div className="mt-6 flex justify-between">
+            <button
+              onClick={() => navigate('/login')} // Chuyển hướng đến trang đăng nhập
+              className="text-indigo-600 hover:text-indigo-500 text-sm"
+            >
+              Đã có tài khoản? Đăng nhập
+            </button>
+            <button
+              onClick={() => navigate('/')} // Chuyển hướng về trang chủ
+              className="text-indigo-600 hover:text-indigo-500 text-sm"
+            >
+              Về trang chủ
+            </button>
+          </div>
         </div>
       </div>
     </div>

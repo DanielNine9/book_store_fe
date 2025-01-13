@@ -73,7 +73,7 @@ export function AddBookForm({ onSubmit, onClose, book }: AddBookFormProps) {
   });
 
   // Handle form submission
-  const onFormSubmit = (e) => {
+  const onFormSubmit = (e: any) => {
     const data = getValues();
     onSubmit(e, {
       ...data,

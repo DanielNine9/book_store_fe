@@ -1,20 +1,41 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useForm } from 'react-hook-form'; // Import React Hook Form
+import { yupResolver } from '@hookform/resolvers/yup'; // For Yup integration
+import * as yup from 'yup'; // Import Yup for validation
+import { loginUser } from '../../services/AuthService';
+
+// Define the validation schema using Yup
+const schema = yup.object().shape({
+  username: yup.string().required('Username is required'),
+  password: yup.string().required('Password is required'),
+});
 
 export function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { signIn } = useAuth();
-  const navigate = useNavigate(); // Khởi tạo navigate
+  const navigate = useNavigate(); // Initialize navigate
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(schema), // Use Yup for form validation
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle form submission
+  const handleLogin = async (data: any) => {
     try {
-      await signIn(email, password);
+      const response = await loginUser({ username: data.username, password: data.password });
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response));
+
+      if (response.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
-      setError('Invalid email or password');
+      setError('Invalid username or password');
     }
   };
 
@@ -28,7 +49,7 @@ export function LoginForm() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit(handleLogin)}>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded">
                 {error}
@@ -36,19 +57,18 @@ export function LoginForm() {
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                Username
               </label>
               <div className="mt-1">
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  name="username"
+                  type="text"
+                  {...register('username')} // Register input with react-hook-form
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
+                {errors.username && <p className="text-red-500 text-xs">{errors.username.message}</p>}
               </div>
             </div>
 
@@ -61,11 +81,10 @@ export function LoginForm() {
                   id="password"
                   name="password"
                   type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register('password')} // Register input with react-hook-form
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
+                {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
               </div>
             </div>
 
@@ -79,16 +98,16 @@ export function LoginForm() {
             </div>
           </form>
 
-          {/* Các nút điều hướng */}
+          {/* Navigation buttons */}
           <div className="mt-6 flex justify-between">
             <button
-              onClick={() => navigate('/register')} // Chuyển hướng đến trang đăng ký
+              onClick={() => navigate('/register')} // Navigate to register page
               className="text-indigo-600 hover:text-indigo-500 text-sm"
             >
               Chưa có tài khoản? Đăng ký ngay
             </button>
             <button
-              onClick={() => navigate('/')} // Chuyển hướng về trang chủ
+              onClick={() => navigate('/')} // Navigate to home page
               className="text-indigo-600 hover:text-indigo-500 text-sm"
             >
               Về trang chủ

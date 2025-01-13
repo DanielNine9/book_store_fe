@@ -18,10 +18,11 @@ export function AuthorsContent() {
   const { data, error, isLoading, refetch } = useAuthorsQuery(currentPage, itemsPerPage);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    // e.preventDefault();
     try {
       setIsAddModalOpen(false);
       await refetch();  // Trigger refetch after adding the author
+      alert('Thêm thành công');
     } catch (error) {
       console.error("Error adding author:", error);
       alert('Thêm không thành công');
@@ -165,7 +166,8 @@ export function AuthorsContent() {
           <AddAuthorForm
             onClose={() => setIsEditModalOpen(false)}
             onSubmit={async (e: React.FormEvent) => {
-              e.preventDefault();
+              // e.preventDefault();
+              alert("Chỉnh sửa thành công")
               setIsEditModalOpen(false);
               await refetch();  // Trigger refetch after updating the author
             }}

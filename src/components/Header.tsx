@@ -2,6 +2,7 @@ import React from 'react';
 import { BookOpen, Search, Heart, ShoppingCart } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useWishlist } from '../hooks/useWishlist';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 interface HeaderProps {
   onCartClick: () => void;
@@ -11,6 +12,7 @@ interface HeaderProps {
 export function Header({ onCartClick, onWishlistClick }: HeaderProps) {
   const { cartItems } = useCart();
   const { wishlistItems } = useWishlist();
+  const navigate = useNavigate(); // Khởi tạo navigate
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -62,7 +64,10 @@ export function Header({ onCartClick, onWishlistClick }: HeaderProps) {
                 </span>
               )}
             </button>
-            <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+            <button 
+              onClick={() => navigate("/login")} // Dùng useNavigate để chuyển hướng
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+            >
               Đăng nhập
             </button>
           </div>

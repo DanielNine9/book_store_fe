@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { signIn } = useAuth();
+  const navigate = useNavigate(); // Khởi tạo navigate
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +34,7 @@ export function LoginForm() {
                 {error}
               </div>
             )}
-            
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email
@@ -76,6 +78,22 @@ export function LoginForm() {
               </button>
             </div>
           </form>
+
+          {/* Các nút điều hướng */}
+          <div className="mt-6 flex justify-between">
+            <button
+              onClick={() => navigate('/register')} // Chuyển hướng đến trang đăng ký
+              className="text-indigo-600 hover:text-indigo-500 text-sm"
+            >
+              Chưa có tài khoản? Đăng ký ngay
+            </button>
+            <button
+              onClick={() => navigate('/')} // Chuyển hướng về trang chủ
+              className="text-indigo-600 hover:text-indigo-500 text-sm"
+            >
+              Về trang chủ
+            </button>
+          </div>
         </div>
       </div>
     </div>

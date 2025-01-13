@@ -135,7 +135,7 @@ export function AddBookForm({ onSubmit, onClose, book }: AddBookFormProps) {
                 {...field}
                 className="flex-1"
                 options={authorsData?.authors || []}
-                getOptionLabel={(option) => option.name || ""}
+                getOptionLabel={(option: any) => option.name || ""}
                 onChange={(_, newValue) => field.onChange(newValue)}
                 loading={isAuthorsLoading}
                 renderInput={(params) => (

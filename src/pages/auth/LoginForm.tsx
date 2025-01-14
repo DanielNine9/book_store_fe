@@ -63,9 +63,8 @@ export function LoginForm() {
               <div className="mt-1">
                 <input
                   id="username"
-                  name="username"
                   type="text"
-                  {...register('username')} // Register input with react-hook-form
+                  {...register('username')}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
                 {errors.username && <p className="text-red-500 text-xs">{errors.username.message}</p>}
@@ -79,7 +78,6 @@ export function LoginForm() {
               <div className="mt-1">
                 <input
                   id="password"
-                  name="password"
                   type="password"
                   {...register('password')} // Register input with react-hook-form
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"

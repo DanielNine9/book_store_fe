@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Modal } from '../components/shared/Modal';
 import { AddUserForm } from '../components/users/AddUserForm';
-import { Table } from '../../../components/Table';
 import useUsersQuery from '../../../queries/UserQuery';
+import { Modal } from '../components/shared/Modal';
+import { Table } from '../../../components/Table';
+import { createUser, updateUser, deleteUser } from '../../../services/UserService';
 
 export function UsersContent() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<number>(1); 
-  const [itemsPerPage, setItemsPerPage] = useState<number>(Number(import.meta.env.VITE_ITEMS_PER_PAGE)); 
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(Number(import.meta.env.VITE_ITEMS_PER_PAGE));
+  const [selectedUser, setSelectedUser] = useState<any>(null);  // Store the user for editing
   const { data, error, isLoading, refetch } = useUsersQuery(currentPage, itemsPerPage);
+  const totalPages = data?.total_items ? Math.ceil(data.total_items / itemsPerPage) : 0;
 
-  const totalPages = data?.total_items
-    ? Math.ceil(data.total_items / itemsPerPage)
-    : 0;
   useEffect(() => {
     if (currentPage > totalPages) {
       setCurrentPage(1);
@@ -23,7 +22,7 @@ export function UsersContent() {
   const columns = [
     { label: 'Mã', field: 'code' },
     { label: 'Người dùng', field: 'username' },
-    { label: 'Email', field: 'email' }, 
+    { label: 'Email', field: 'email' },
     { label: 'Vai trò', field: 'role' },
     {
       label: 'Trạng thái',
@@ -43,16 +42,49 @@ export function UsersContent() {
       field: 'actions',
       render: (item: any) => (
         <div className="flex items-center space-x-3">
-          <button className="text-indigo-600 hover:text-indigo-900">Sửa</button>
-          <button className="text-red-600 hover:text-red-900">Xóa</button>
+          <button className="text-indigo-600 hover:text-indigo-900" onClick={() => handleEditUser(item)}>
+            Sửa
+          </button>
+          <button className="text-red-600 hover:text-red-900" onClick={() => handleDeleteUser(item)}>
+            Xóa
+          </button>
         </div>
       ),
     },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsAddModalOpen(false);
+  const handleSubmit = async (data: any) => {
+    try {
+      if (selectedUser) {
+        // Update user if selectedUser exists
+        await updateUser(selectedUser.ID, data.username, data.password, data.role, data.active);
+      } else {
+        // Create new user
+        await createUser(data.username, data.password, data.role, data.active);
+      }
+      refetch();
+      setIsAddModalOpen(false);
+      setSelectedUser(null); // Reset selected user
+    } catch (error) {
+      console.error('Error saving user', error);
+    }
+  };
+
+  const handleDeleteUser = async (user: any) => {
+    try {
+      const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa người dùng ${user.username}?`);
+      if (confirmed) {
+        await deleteUser(user.ID);
+        refetch();
+      }
+    } catch (error) {
+      console.error('Error deleting user', error);
+    }
+  };
+
+  const handleEditUser = (user: any) => {
+    setSelectedUser(user); // Set selected user to pre-populate form
+    setIsAddModalOpen(true);
   };
 
   return (
@@ -61,7 +93,10 @@ export function UsersContent() {
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">Danh sách Người dùng</h2>
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => {
+              setSelectedUser(null); // Reset selected user to null for creating new user
+              setIsAddModalOpen(true);
+            }}
             className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
           >
             Thêm người dùng
@@ -69,9 +104,10 @@ export function UsersContent() {
         </div>
       </div>
 
-      
+      {/* Table for displaying users */}
       <Table data={data?.users || []} columns={columns} loading={isLoading} error={error?.message as string} />
 
+      {/* Pagination */}
       <div className="flex justify-between items-center p-4">
         <div className="flex items-center">
           <span className="mr-2">Hiển thị</span>
@@ -108,13 +144,16 @@ export function UsersContent() {
         </div>
       </div>
 
-      {/* Modal thêm người dùng */}
+      {/* Modal for adding/editing a user */}
       <Modal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Thêm người dùng mới"
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setSelectedUser(null); // Reset selected user when modal is closed
+        }}
+        title={selectedUser ? "Sửa người dùng" : "Thêm người dùng mới"}
       >
-        <AddUserForm onSubmit={handleSubmit} />
+        <AddUserForm onSubmit={handleSubmit} user={selectedUser} />
       </Modal>
     </div>
   );

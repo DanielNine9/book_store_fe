@@ -13,9 +13,10 @@ interface SidebarProps {
 export function Sidebar({ activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen }: SidebarProps) {
   const navigate = useNavigate();  
 
-  // Function to handle logout
   const handleLogout = () => {
-    navigate('/'); 
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
   };
   return (
     <div className={`bg-indigo-800 text-white ${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-300 ease-in-out`}>

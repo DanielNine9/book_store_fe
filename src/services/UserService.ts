@@ -18,21 +18,20 @@ export const fetchUsers = async (page: number, limit: number, search: string, se
   }
 };
 
-// Create a new user
-export const createUser = async (username: string, password: string, email: string) => {
+export const createUser = async (username: string, password: string, role: string, active: boolean) => {
   try {
     const response = await axiosInstance.post('/users/', {
       username,
       password,
-      email,
+      role,
+      active: Boolean(active)
     });
-    return response.data;  // Return the API response (success message + user data)
+    return response.data;  
   } catch (error) {
     throw new Error('Error creating user');
   }
 };
 
-// Update user information
 interface UserUpdateData {
   id: string;
   username?: string;
@@ -40,12 +39,13 @@ interface UserUpdateData {
   email?: string;
 }
 
-export const updateUser = async ({ id, username, password, email }: UserUpdateData) => {
+export const updateUser = async (id: string, username: string, password: string, role: string, active: boolean) => {
   try {
     const response = await axiosInstance.put(`/users/${id}`, {
       username,
       password,
-      email,
+      role,
+      active: Boolean(active)
     });
     return response.data;  // Return updated user data or success message
   } catch (error) {
@@ -54,12 +54,13 @@ export const updateUser = async ({ id, username, password, email }: UserUpdateDa
   }
 };
 
-// Delete a user by ID
 export const deleteUser = async (id: string) => {
   try {
     const response = await axiosInstance.delete(`/users/${id}`);
-    return response.data;  // Return success message after deletion
+    return response.data;
   } catch (error) {
     throw new Error('Error deleting user');
   }
 };
+
+

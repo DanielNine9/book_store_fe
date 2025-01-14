@@ -1,36 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { BookCard } from '../../components/BookCard';
-import axios from 'axios';
 import useBooksQuery from '../../queries/BookQuery';
+import { useNavigate } from 'react-router-dom';
+import { BookCard } from './components/BookCard';
 
 const BookSection = () => {
   const [books, setBooks] = useState([]);
   const [priceRange, setPriceRange] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
-
+  const  navigate = useNavigate()
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
 
   const { data, isLoading, error, refetch } = useBooksQuery(
     1,
     8,
-  
   );
-  // Function to fetch books from the API
-  // const fetchBooks = async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       `http://localhost:8080/books/?page=1&limit=5&search=g&search_fields=&search_operator=OR`, 
-       
-  //     );
-  //     setBooks(response.data.books);
-  //   } catch (error) {
-  //     console.error('Error fetching books:', error);
-  //   }
-  // };
 
-  // useEffect(() => {
-  //   fetchBooks();
-  // }, [priceRange, selectedCategory, sortBy, currentPage]);
+  const openDetail = (book) => {
+    setSelectedBook(book);
+    setIsDetailOpen(true);
+  };
+
+  const closeDetail = () => {
+    setIsDetailOpen(false);
+    setSelectedBook(null); // Reset selected book when closing
+  };
 
   return (
     <div>
@@ -62,10 +57,16 @@ const BookSection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data?.books && data?.books.length > 0 && data.books?.map((book) => (
-            <BookCard key={book.id} book={book} />
+            <BookCard
+              key={book.id} 
+              book={book} 
+              onViewDetail={() => {navigate(`/book/detail/${book.id}`)}} // Open modal on card click
+            />
           ))}
         </div>
       </div>
+
+     
     </div>
   );
 };

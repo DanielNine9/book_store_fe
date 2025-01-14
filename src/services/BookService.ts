@@ -6,10 +6,16 @@ export const fetchBooks = async (
   limit: number,
   search: string,
   searchFields: string,
-  searchOperator: string
+  searchOperator: string,
 ) => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const token = user?.token;
   try {
     const response = await axiosInstance.get("/books/", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       params: {
         page,
         limit,

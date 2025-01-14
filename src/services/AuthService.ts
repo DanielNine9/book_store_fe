@@ -3,15 +3,13 @@ import axiosInstance from "../utils/axiosConfig";
 // Register function for creating a new user
 interface RegisterData {
   username: string;
-  email: string;
   password: string;
 }
 
-export const registerUser = async ({ username, email, password }: RegisterData) => {
+export const registerUser = async ({ username, password }: RegisterData) => {
   try {
     const userData = {
       username,
-      email,
       password,
     };
 

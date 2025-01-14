@@ -9,7 +9,7 @@ interface HeaderProps {
   onWishlistClick: () => void;
 }
 
-export function Header({ onCartClick, onWishlistClick }: HeaderProps) {
+export function Header() {
   const { cartItems } = useCart();
   const { wishlistItems } = useWishlist();
   const navigate = useNavigate(); 
@@ -55,7 +55,6 @@ export function Header({ onCartClick, onWishlistClick }: HeaderProps) {
           <div className="flex items-center space-x-4">
             <button 
               className="p-2 hover:bg-gray-100 rounded-full relative"
-              onClick={onWishlistClick}
             >
               <Heart className="h-6 w-6 text-gray-600" />
               {wishlistItems.length > 0 && (
@@ -66,7 +65,6 @@ export function Header({ onCartClick, onWishlistClick }: HeaderProps) {
             </button>
             <button 
               className="p-2 hover:bg-gray-100 rounded-full relative"
-              onClick={onCartClick}
             >
               <ShoppingCart className="h-6 w-6 text-gray-600" />
               {cartItems.length > 0 && (

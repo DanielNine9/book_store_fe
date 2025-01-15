@@ -9,6 +9,8 @@ import { CartPage } from "./Cart";
 import BookList from "./BookList";
 import NotFound from "../NotFound";
 import TransactionList from "./Transactions";
+import ContactUs from "./ContactUs";
+import AboutUs from "./AboutUs";
 
 const CustomerRoute = () => {
   return (
@@ -17,6 +19,8 @@ const CustomerRoute = () => {
         <Route path="/" element={<CustomerPage />} />
         <Route path="/book/detail/:id" element={<BookDetail />} />
         <Route path="/favorites" element={<FavoriteBooks />} />
+        <Route path="/contact-us" element={<ContactUs />} />
+        <Route path="/about-us" element={<AboutUs />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/book/list" element={<BookList />} />
         <Route path="/transactions" element={<TransactionList />} />

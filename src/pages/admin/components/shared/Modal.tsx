@@ -15,7 +15,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose} />
-        <div className="relative w-full max-w-lg transform rounded-lg bg-white shadow-xl transition-all">
+        <div className="relative w-9/12 transform rounded-lg bg-white shadow-xl transition-all">
           <div className="flex items-center justify-between border-b p-4">
             <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             <button

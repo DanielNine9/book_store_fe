@@ -8,7 +8,6 @@ import { CustomToast } from "../../../components/Toast";
 interface BookCardProps {
   book: any;
   onViewDetail: (book: Book) => void;
-  userID: number;
   refetch: () => void;
 }
 

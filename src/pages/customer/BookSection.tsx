@@ -14,7 +14,7 @@ const BookSection = () => {
 
   const { data, isLoading, error, refetch } = useBooksQuery(
     1,
-    8,
+    10000 ,
   );
 
   const openDetail = (book) => {
@@ -58,6 +58,7 @@ const BookSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data?.books && data?.books.length > 0 && data.books?.map((book) => (
             <BookCard
+            refetch={refetch}
               key={book.id} 
               book={book} 
               onViewDetail={() => {navigate(`/book/detail/${book.id}`)}} // Open modal on card click

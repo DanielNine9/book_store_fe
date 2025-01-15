@@ -8,15 +8,16 @@ interface BookCardProps {
   book: any;
   onViewDetail: (book: Book) => void;
   userID: number; // Assuming userID is passed as a prop
+  refetch: () => void
 }
 
-export function BookCard({ book, onViewDetail }: BookCardProps) {
+export function BookCard({ book, onViewDetail, refetch }: BookCardProps) {
   const { addToCart } = useCart();
   const [favoriteId, setFavoriteId] = useState<number>(0);
-  
-  // Set the book image, fallback to a default image if it's not available
-  const bookImage = book.categories?.[0]?.image_url || "path/to/default-image.jpg";
 
+  // Get the first image from book.images or fallback to a default image
+  const bookImage = book.images?.[0]?.url || "path/to/default-image.jpg";  // Fallback to default image if no images
+  console.log("url ", book.images)
   // Toggle favorite status
   const toggleFavorite = async () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -45,6 +46,7 @@ export function BookCard({ book, onViewDetail }: BookCardProps) {
         );
         setFavoriteId(response.data.favorite); // Store the returned favorite ID
       }
+      await refetch()
     } catch (error) {
       console.error("Error while toggling favorite:", error);
     }
@@ -58,7 +60,7 @@ export function BookCard({ book, onViewDetail }: BookCardProps) {
     <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="relative">
         <img
-          src={bookImage} // Use category image or fallback to default image
+          src={bookImage} // Use the first image from book.images or fallback to default image
           alt={book.title}
           className="w-full h-64 object-cover rounded-t-lg cursor-pointer"
           onClick={() => onViewDetail(book)}

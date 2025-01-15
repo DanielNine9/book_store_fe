@@ -29,6 +29,7 @@ import { FavoriteBooks } from "./pages/customer/FavoriteBook";
 import { Header } from "./components/Header";
 import CustomerPage from "./pages/customer/CustomerPage";
 import CustomerRoute from "./pages/customer/CustomerRoute";
+import { Toaster } from "react-hot-toast";
 
 export const categories = [
   { id: "literature", name: "Văn học", icon: <BookIcon /> },
@@ -46,6 +47,7 @@ function App() {
 
   return (
     <Router>
+      <Toaster position="top-right" />
       <Routes>
         <Route path="/*" element={<CustomerRoute />} />
         <Route path="/login" element={<LoginForm />} />

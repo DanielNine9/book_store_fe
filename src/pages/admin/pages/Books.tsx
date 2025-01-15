@@ -13,10 +13,10 @@ import { ConfirmationModal } from "../../../components/ConfirmationModal";
 
 export function BooksContent() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); 
-  const [currentBook, setCurrentBook] = useState<any>(null); 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentBook, setCurrentBook] = useState<any>(null);
 
-  const [currentPage, setCurrentPage] = useState(1); 
+  const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // Use the `useBooksQuery` hook to fetch books data with pagination
@@ -33,7 +33,7 @@ export function BooksContent() {
 
   // Handle edit book
   const handleEditBook = (book: any) => {
-    setCurrentBook(book); // Lưu thông tin sách vào state
+    setCurrentBook(book); // Lưu thông tin sách vào statea
     setIsEditModalOpen(true); // Mở modal sửa
   };
 
@@ -206,7 +206,42 @@ export function BooksContent() {
           onSubmit={async (e, updatedData) => {
             try {
               console.log("updatedData ", updatedData);
-              await updateBook(currentBook?.ID, updatedData);
+                alert("vao day")
+              // Destructure the fields from updatedData to pass to updateBook
+              const {
+                title,
+                description,
+                author,
+                category,
+                price,
+                quantity,
+                publisher,
+                publication_year,
+                weight,
+                dimensions,
+                pages,
+                binding_type,
+                images,
+              } = updatedData;
+              console.log("currentBook ", currentBook)
+              await updateBook(
+                currentBook?.id, 
+                title,
+                description,
+                author.ID, // Extract the author ID from the author object
+                category.map((item: any) => item.ID), // Extract category IDs
+                price,
+                quantity,
+                publisher,
+                publication_year,
+                weight,
+                dimensions,
+                pages,
+                binding_type,
+                images // Assuming images are passed correctly as a File[] array
+              );
+
+              // Close the modal and refetch data after updating
               setIsEditModalOpen(false);
               await refetch();
             } catch (error) {
@@ -214,7 +249,7 @@ export function BooksContent() {
             }
           }}
           onClose={() => setIsEditModalOpen(false)}
-          book={currentBook} // Truyền thông tin sách cần sửa
+          book={currentBook} // Passing the current book data for editing
         />
       </Modal>
       <ConfirmationModal
@@ -231,21 +266,30 @@ export function BooksContent() {
       >
         <AddBookForm
           onSubmit={async (e, formData) => {
-            // Call createBook here with the formData
-            console.log("data2", formData);
+            console.log("data2", formData); // To check the formData
+
             try {
+              // Call createBook here with the correct formData
               await createBook(
                 formData.title,
                 formData.description,
-                formData.author.ID,
-                formData.categories,
+                formData.author.ID, // Assuming 'ID' is the correct field in formData
+                formData.category.map((item: any) => item.ID), // Assuming categories is an array of objects
                 formData.price,
-                formData.quantity
+                formData.quantity,
+                formData.publisher,
+                formData.publication_year,
+                formData.weight,
+                formData.dimensions,
+                formData.pages,
+                formData.binding_type,
+                formData.images // Assuming images is an array of File objects
               );
+
               setIsAddModalOpen(false); // Close the modal after success
               await refetch(); // Refetch books to update the list
             } catch (error) {
-              console.error("Error creating book:", error);
+              console.log("Error creating book:", error);
             }
           }}
           onClose={() => setIsAddModalOpen(false)}

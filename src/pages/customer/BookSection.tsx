@@ -4,25 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { BookCard } from "./components/BookCard";
 
 const BookSection = () => {
-  const [books, setBooks] = useState([]);
   const [priceRange, setPriceRange] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const navigate = useNavigate();
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [selectedBook, setSelectedBook] = useState(null);
 
   const { data, isLoading, error, refetch } = useBooksQuery(1, 10000);
 
-  const openDetail = (book) => {
-    setSelectedBook(book);
-    setIsDetailOpen(true);
-  };
-
-  const closeDetail = () => {
-    setIsDetailOpen(false);
-    setSelectedBook(null); // Reset selected book when closing
-  };
 
   return (
     <div>
@@ -55,7 +43,7 @@ const BookSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {data?.books &&
             data?.books.length > 0 &&
-            data.books?.map((book) => (
+            data.books?.map((book: any) => (
               <BookCard
                 refetch={refetch}
                 key={book.id}

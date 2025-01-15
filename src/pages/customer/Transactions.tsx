@@ -13,8 +13,8 @@ const TransactionList: React.FC = () => {
     useEffect(() => {
         async function loadTransactions() {
             try {
-                const data = await fetchTransactions(10);
-                setTransactions(data.transactions); // Giả sử data.transactions chứa danh sách giao dịch
+                const data: any = await fetchTransactions(10);
+                setTransactions(data?.transactions || []); // Giả sử data.transactions chứa danh sách giao dịch
                 setLoading(false);
             } catch (err) {
                 setError("Không thể tải dữ liệu.");

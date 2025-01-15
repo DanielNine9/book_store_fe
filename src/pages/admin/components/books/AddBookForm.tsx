@@ -1,15 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Library } from "lucide-react";
 import {
   Autocomplete,
   TextField,
   CircularProgress,
+  IconButton,
+  Button,
+  Input,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import useAuthorsQuery from "../../../../queries/AuthorQuery";
 import useCategoriesQuery from "../../../../queries/CategoryQuery";
+import { Delete } from "lucide-react";  // For deleting images
 
 interface AddBookFormProps {
   onSubmit: (e: React.FormEvent, bookData: any) => void;
@@ -43,6 +47,23 @@ const validationSchema = yup.object().shape({
   author: yup.object().required("Cần chọn một tác giả"), // Single author validation
   category: yup.array().min(1, "Cần chọn ít nhất một thể loại"),
   description: yup.string().optional(),
+  publisher: yup.string().required("Nhà xuất bản là bắt buộc"),
+  publication_year: yup
+    .number()
+    .required("Năm xuất bản là bắt buộc")
+    .typeError("Năm xuất bản phải là số"),
+  weight: yup
+    .number()
+    .required("Cân nặng là bắt buộc")
+    .positive("Cân nặng phải là số dương")
+    .typeError("Cân nặng phải là số"),
+  dimensions: yup.string().required("Kích thước là bắt buộc"),
+  pages: yup
+    .number()
+    .required("Số trang là bắt buộc")
+    .typeError("Số trang phải là số"),
+  binding_type: yup.string().required("Loại bìa là bắt buộc"),
+  images: yup.array().min(1, "Cần ít nhất một ảnh").required("Ảnh là bắt buộc"),  // Image validation
 });
 
 export function AddBookForm({ onSubmit, onClose, book }: AddBookFormProps) {
@@ -51,33 +72,80 @@ export function AddBookForm({ onSubmit, onClose, book }: AddBookFormProps) {
     100,
     ""
   );
+  console.log(book)
   const { data: categoriesData, isLoading: isCategoriesLoading } =
     useCategoriesQuery(1, 100, "");
-
+// console.log("categoriesData?.categories[0].ID", categoriesData?.categories[0].ID)
   const {
     control,
     handleSubmit,
     formState: { errors },
     reset,
     getValues,
+    setValue,
   } = useForm({
     resolver: yupResolver(validationSchema),
+    // defaultValues: {
+    //   title: "Test Book Title",
+    //   author: authorsData?.authors[0], 
+    //   category: [categoriesData?.categories[0]],
+    //   description: "This is a test description.",
+    //   price: 1000,
+    //   quantity: 10,
+    //   publisher: "Test Publisher",
+    //   publication_year: 2023,
+    //   weight: 0.5,
+    //   dimensions: "15 x 20 x 3 cm",
+    //   pages: 200,
+    //   binding_type: "Paperback",
+    //   images: [{ name: "test-image.jpg", type: "image/jpeg", size: 1000000 }], // Example image object
+    // },
     defaultValues: {
       title: book?.title || "",
-      author: book?.author || null, // Single author as null
+      author: book?.author || null, 
       category: book?.categories || [],
       description: book?.description || "",
       price: book?.price || 0,
       quantity: book?.quantity_in_stock || 0,
+      publisher: book?.book_detail?.publisher || "",
+      publication_year: book?.book_detail?.publication_year || "",
+      weight: book?.book_detail?.weight || 0,
+      dimensions: book?.book_detail?.dimensions || "",
+      pages: book?.book_detail?.pages || 0,
+      binding_type: book?.book_detail?.binding_type || "",
+      images: book?.images || [],  
     },
   });
 
-  // Handle form submission
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]); // To show selected images before submission
+
+  // Handle image selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newImages = Array.from(files);
+      const imageUrls = newImages.map((file) => URL.createObjectURL(file));
+      setImagePreviews((prev) => [...prev, ...imageUrls]);
+
+      const images = getValues("images");
+      setValue("images", [...images, ...newImages]);
+    }
+  };
+
+  const handleImageDelete = (index: number) => {
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    const images = getValues("images");
+    const newImages = images.filter((_, i) => i !== index);
+    setValue("images", newImages);
+  };
+
   const onFormSubmit = (e: any) => {
     const data = getValues();
+    alert("onFormSubmit")
     onSubmit(e, {
       ...data,
       categories: data?.category?.map((item: any) => item.ID),
+      images: data?.images,  
     });
   };
 
@@ -125,8 +193,8 @@ export function AddBookForm({ onSubmit, onClose, book }: AddBookFormProps) {
           />
         </div>
 
+        {/* Author Search */}
         <div className="d-flex gap-2" style={{ display: "flex" }}>
-          {/* Author Search */}
           <Controller
             name="author"
             control={control}
@@ -184,7 +252,7 @@ export function AddBookForm({ onSubmit, onClose, book }: AddBookFormProps) {
               {...field}
               multiple
               options={categoriesData?.categories || []}
-              getOptionLabel={(option) => option.name}
+              getOptionLabel={(option) => option?.name}
               onChange={(_, newValue) => field.onChange(newValue)}
               loading={isCategoriesLoading}
               renderInput={(params) => (
@@ -206,6 +274,143 @@ export function AddBookForm({ onSubmit, onClose, book }: AddBookFormProps) {
             />
           )}
         />
+
+        {/* Additional Fields */}
+        <h3>Chi tiết</h3>
+        <Controller
+          name="publisher"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Nhà xuất bản"
+              variant="standard"
+              error={!!errors.publisher}
+              helperText={errors.publisher?.message}
+              fullWidth
+            />
+          )}
+        />
+        <Controller
+          name="publication_year"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Năm xuất bản"
+              variant="standard"
+              type="number"
+              error={!!errors.publication_year}
+              helperText={errors.publication_year?.message}
+              fullWidth
+            />
+          )}
+        />
+        <Controller
+          name="weight"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Cân nặng (kg)"
+              variant="standard"
+              type="number"
+              error={!!errors.weight}
+              helperText={errors.weight?.message}
+              fullWidth
+            />
+          )}
+        />
+        <Controller
+          name="dimensions"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Kích thước"
+              variant="standard"
+              error={!!errors.dimensions}
+              helperText={errors.dimensions?.message}
+              fullWidth
+            />
+          )}
+        />
+        <Controller
+          name="pages"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Số trang"
+              variant="standard"
+              type="number"
+              error={!!errors.pages}
+              helperText={errors.pages?.message}
+              fullWidth
+            />
+          )}
+        />
+        <Controller
+          name="binding_type"
+          control={control}
+          render={({ field }) => (
+            <TextField
+              {...field}
+              label="Loại bìa"
+              variant="standard"
+              error={!!errors.binding_type}
+              helperText={errors.binding_type?.message}
+              fullWidth
+            />
+          )}
+        />
+
+        {/* Image Upload */}
+        <div>
+          <Controller
+            name="images"
+            control={control}
+            render={({ field }) => (
+              <div>
+                <Button
+                  variant="contained"
+                  component="label"
+                  className="mt-4"
+                >
+                  Thêm ảnh
+                  <input
+                    type="file"
+                    multiple
+                    hidden
+                    onChange={handleImageChange}
+                  />
+                </Button>
+                {imagePreviews.length > 0 && (
+                  <div className="mt-4">
+                    <div className="flex gap-1">
+                      {imagePreviews.map((image, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={image}
+                            alt={`image-${index}`}
+                            className="h-24 w-24 object-cover"
+                          />
+                          <IconButton
+                            onClick={() => handleImageDelete(index)}
+                            className="absolute top-0 right-0"
+                            size="small"
+                          >
+                            <Delete />
+                          </IconButton>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          />
+        </div>
 
         {/* Description */}
         <Controller

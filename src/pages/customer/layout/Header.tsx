@@ -92,6 +92,14 @@ export function Header() {
                       </li>
                       <li>
                         <button
+                          onClick={() => navigate('/transactions')}
+                          className="block px-4 py-2 text-sm hover:bg-gray-100 w-full text-left"
+                        >
+                          Transactions
+                        </button>
+                      </li>
+                      <li>
+                        <button
                           onClick={handleLogout}
                           className="block px-4 py-2 text-sm hover:bg-gray-100 w-full text-left"
                         >

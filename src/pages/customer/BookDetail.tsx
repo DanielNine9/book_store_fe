@@ -8,16 +8,19 @@ import {
   Heart,
   ChevronRight,
   ChevronLeft,
+  ShoppingCart,
 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import axiosInstance from "../../utils/axiosConfig";
+import { CustomToast } from "../../components/Toast";
+import toast from "react-hot-toast";
 
 export function BookDetail() {
   const [book, setBook] = useState<any | null>(null);
-  const [isFavorite, setIsFavorite] = useState(false); // Trạng thái yêu thích
+  const [favoriteId, setFavoriteId] = useState<number>(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { id } = useParams<{ id: string }>();
 
-  // Lấy thông tin sách
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const token = user?.token;
@@ -30,9 +33,7 @@ export function BookDetail() {
           }});
         if (response.status === 200) {
           setBook(response.data);
-          setIsFavorite(response.data.is_favorite); // Set trạng thái yêu thích khi có dữ liệu
-        } else {
-          console.error("Failed to fetch book details");
+          setFavoriteId(response.data.id_favorite);
         }
       } catch (error) {
         console.error("Error fetching book details:", error);
@@ -43,14 +44,6 @@ export function BookDetail() {
       fetchBookDetails();
     }
   }, [id]);
-  console.log(book);
-
-  const [favoriteId, setFavoriteId] = useState<number>(0);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  // Xử lý khi nhấn nút yêu thích
-  useEffect(() => {
-    setFavoriteId(book?.id_favorite);
-  }, [book]);
 
   const toggleFavorite = async () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -65,7 +58,6 @@ export function BookDetail() {
         });
         setFavoriteId(0);
       } else {
-        // Add to favorites
         const response = await axiosInstance.post(
           "/favorites/",
           { book_id: book.id },
@@ -76,14 +68,43 @@ export function BookDetail() {
             },
           }
         );
-        setFavoriteId(response.data.favorite); // Store the returned favorite ID
+        setFavoriteId(response.data.favorite);
       }
     } catch (error) {
       console.error("Error while toggling favorite:", error);
     }
   };
 
+  const handleAddToCart = async () => {
+    try {
+      const response = await axiosInstance.post(`/purchases/${book.id}`, {
+        quantity: 1
+      });
+      
+      if (response.status === 200 || response.status === 201) {
+        toast.custom((t) => (
+          <CustomToast
+            t={t}
+            message={`Đã thêm "${book.title}" vào giỏ hàng`}
+            type="success"
+          />
+        ));
+      }
+    } catch (error) {
+      toast.custom((t) => (
+        <CustomToast
+          t={t}
+          message="Không thể thêm vào giỏ hàng. Vui lòng thử lại!"
+          type="error"
+        />
+      ));
+      console.error("Error:", error);
+    } 
+  };
+
+
   if (!book) return null;
+
   const nextImage = () => {
     if (book?.images?.length > 0) {
       setCurrentImageIndex((prevIndex) =>
@@ -92,7 +113,6 @@ export function BookDetail() {
     }
   };
 
-  // Chuyển về ảnh trước
   const prevImage = () => {
     if (book?.images?.length > 0) {
       setCurrentImageIndex((prevIndex) =>
@@ -100,72 +120,130 @@ export function BookDetail() {
       );
     }
   };
-  console.log(book);
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-6 md:px-12">
-      {/* Book Details Header */}
       <div className="container mx-auto max-w-7xl">
+        {/* Header */}
         <div className="flex justify-between items-center border-b pb-6 mb-8">
-          <h1 className="text-3xl font-extrabold text-gray-900">
+          <h1 className="text-3xl font-extrabold text-gray-900 line-clamp-1">
             {book.title}
           </h1>
-          <button
-            onClick={() => window.history.back()}
-            className="text-indigo-600 hover:text-indigo-800 flex items-center gap-2 text-lg"
-          >
-            <X className="w-5 h-5" /> Quay lại
-          </button>
-        </div>
-        <div className="flex justify-end">
-          <button
-            onClick={toggleFavorite}
-            className={`p-2 rounded-full shadow hover:bg-gray-100 ${
-              favoriteId > 0 ? "text-red-500" : "text-gray-600"
-            }`}
-          >
-            <Heart className="h-6 w-6" />
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleFavorite}
+              className={`p-2 rounded-full shadow-md hover:shadow-lg transition-all ${
+                favoriteId > 0 ? "bg-red-50 text-red-500" : "bg-gray-50 text-gray-600"
+              }`}
+            >
+              <Heart className={`h-6 w-6 ${favoriteId > 0 ? "fill-current" : ""}`} />
+            </button>
+            <button
+              onClick={() => window.history.back()}
+              className="text-indigo-600 hover:text-indigo-800 flex items-center gap-2 text-lg"
+            >
+              <X className="w-5 h-5" /> Quay lại
+            </button>
+          </div>
         </div>
 
-        {/* Image Slider Section */}
-        <div className="flex justify-center items-center gap-6">
-          {/* Previous Button */}
-          <button
-            onClick={prevImage}
-            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-          >
-            <ChevronLeft className="h-6 w-6 text-gray-800" />
-          </button>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Image Gallery */}
+          <div className="space-y-4">
+            {/* Main Image */}
+            <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-lg">
+              <img
+                src={book?.images?.[currentImageIndex]?.url || "https://via.placeholder.com/600x800"}
+                alt={book.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 flex items-center justify-between px-4">
+                <button
+                  onClick={prevImage}
+                  className="p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-all"
+                >
+                  <ChevronLeft className="h-6 w-6 text-gray-800" />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="p-2 rounded-full bg-white/80 hover:bg-white shadow-md transition-all"
+                >
+                  <ChevronRight className="h-6 w-6 text-gray-800" />
+                </button>
+              </div>
+            </div>
 
-          {/* Image Display */}
-          <div className="w-full max-w-md aspect-[3/4] rounded-lg overflow-hidden">
-            <img
-              src={
-                book?.images?.[currentImageIndex]?.url ||
-                "path/to/default-image.jpg"
-              }
-              alt={book.title}
-              className="w-full h-full object-cover"
-            />
+            {/* Thumbnail Gallery */}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {book?.images?.map((image: any, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  className={`relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden ${
+                    currentImageIndex === index ? "ring-2 ring-indigo-500" : ""
+                  }`}
+                >
+                  <img
+                    src={image.url}
+                    alt={`${book.title} - ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Next Button */}
-          <button
-            onClick={nextImage}
-            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
-          >
-            <ChevronRight className="h-6 w-6 text-gray-800" />
-          </button>
-        </div>
+          {/* Book Information */}
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-indigo-600 font-medium">
+                  {book.categories?.map((cat: any) => cat.name).join(", ")}
+                </span>
+                <div className="flex items-center">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className="h-5 w-5 text-yellow-400 fill-current"
+                      />
+                    ))}
+                  </div>
+                  <span className="ml-2 text-sm text-gray-600">
+                    (150 đánh giá)
+                  </span>
+                </div>
+              </div>
 
-        {/* Book Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-8">
-          <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <p className="text-3xl font-bold text-indigo-600">
+                  {book.price.toLocaleString()} VND
+                </p>
+                <span className="text-sm text-gray-500">
+                  Còn lại: {book.quantity_in_stock} cuốn
+                </span>
+              </div>
+
+              <button
+                onClick={handleAddToCart}
+                disabled={book.quantity_in_stock === 0}
+                className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg text-white text-lg font-semibold transition-all ${
+                  book.quantity_in_stock > 0
+                    ? "bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg"
+                    : "bg-gray-400 cursor-not-allowed"
+                }`}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {book.quantity_in_stock > 0 ? "Thêm vào giỏ hàng" : "Hết hàng"}
+              </button>
+            </div>
+
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-indigo-50 p-4 rounded-lg text-center">
                 <BookOpen className="h-6 w-6 text-indigo-600 mx-auto mb-2" />
                 <p className="text-sm text-gray-600">
-                  {book.description || "No description available"}
+                  {book.book_detail?.pages || "N/A"} trang
                 </p>
               </div>
               <div className="bg-indigo-50 p-4 rounded-lg text-center">
@@ -177,244 +255,56 @@ export function BookDetail() {
                 <p className="text-sm text-gray-600">Bestseller</p>
               </div>
             </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-indigo-600 font-medium">
-                {book.categories?.[0]?.name}
-              </span>
-              <div className="flex items-center">
-                <div className="flex">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className="h-5 w-5 text-yellow-400 fill-current"
-                    />
-                  ))}
-                </div>
-                <span className="ml-2 text-sm text-gray-600">
-                  (150 đánh giá)
-                </span>
-              </div>
-            </div>
-            <p className="text-lg text-gray-600">
-              Tác giả: {book.author?.name}
-            </p>
-            <h3 className="text-xl font-semibold">Giới thiệu sách</h3>
-            <p className="text-gray-600 leading-relaxed">
-              {book.description || "No description available for this book."}
-            </p>
 
             {/* Book Details */}
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold">Thông tin chi tiết</h3>
-              <div className="grid grid-cols-2 gap-6 mt-4">
-                {/* Publisher */}
-                <div>
-                  <p className="text-sm text-gray-600">Nhà xuất bản</p>
-                  <p className="font-medium">
-                    {book?.book_detail?.publisher || "NXB Trẻ"}
-                  </p>
-                </div>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Tác giả</h3>
+                <p className="text-gray-700">{book.author?.name}</p>
+              </div>
 
-                {/* Publication Year */}
-                <div>
-                  <p className="text-sm text-gray-600">Năm xuất bản</p>
-                  <p className="font-medium">
-                    {book?.book_detail?.publication_year || "2024"}
-                  </p>
-                </div>
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Giới thiệu sách</h3>
+                <p className="text-gray-700 leading-relaxed">
+                  {book.description || "Chưa có mô tả cho cuốn sách này."}
+                </p>
+              </div>
 
-                {/* Pages */}
-                <div>
-                  <p className="text-sm text-gray-600">Số trang</p>
-                  <p className="font-medium">
-                    {book?.book_detail?.pages || "300"}
-                  </p>
-                </div>
-
-                {/* Language (you might need to add this field in your API data) */}
-                <div>
-                  <p className="text-sm text-gray-600">Ngôn ngữ</p>
-                  <p className="font-medium">
-                    {book?.book_detail?.language || "Tiếng Việt"}
-                  </p>
-                </div>
-
-                {/* Weight */}
-                <div>
-                  <p className="text-sm text-gray-600">Khối lượng</p>
-                  <p className="font-medium">
-                    {book?.book_detail?.weight
-                      ? `${book.book_detail.weight} kg`
-                      : "Chưa có thông tin"}
-                  </p>
-                </div>
-
-                {/* Dimensions */}
-                <div>
-                  <p className="text-sm text-gray-600">Kích thước</p>
-                  <p className="font-medium">
-                    {book?.book_detail?.dimensions || "Chưa có thông tin"}
-                  </p>
-                </div>
-
-                {/* Binding Type */}
-                <div>
-                  <p className="text-sm text-gray-600">Loại bìa</p>
-                  <p className="font-medium">
-                    {book?.book_detail?.binding_type || "Bìa mềm"}
-                  </p>
+              <div>
+                <h3 className="text-xl font-semibold mb-4">Thông tin chi tiết</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500">Nhà xuất bản</p>
+                    <p className="font-medium">{book.book_detail?.publisher || "N/A"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500">Năm xuất bản</p>
+                    <p className="font-medium">{book.book_detail?.publication_year || "N/A"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500">Kích thước</p>
+                    <p className="font-medium">{book.book_detail?.dimensions || "N/A"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500">Loại bìa</p>
+                    <p className="font-medium">{book.book_detail?.binding_type || "N/A"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500">Số trang</p>
+                    <p className="font-medium">{book.book_detail?.pages || "N/A"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-gray-500">Khối lượng</p>
+                    <p className="font-medium">
+                      {book.book_detail?.weight ? `${book.book_detail.weight} kg` : "N/A"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Purchase Section */}
-        <div className="mt-12 border-t pt-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-3xl font-bold text-indigo-600">
-                {book.price} VND
-              </p>
-              <p className="text-sm text-gray-600">Đã bao gồm thuế</p>
-            </div>
-            <button className="bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors">
-              Thêm vào giỏ hàng
-            </button>
           </div>
         </div>
       </div>
     </div>
-    // <div className="min-h-screen bg-gray-50 py-12 px-6 md:px-12">
-    //   {/* Book Details Header */}
-    //   <div className="container mx-auto max-w-7xl">
-    //     <div className="flex justify-between items-center border-b pb-6 mb-8">
-    //       <h1 className="text-3xl font-extrabold text-gray-900">
-    //         {book.title}
-    //       </h1>
-    //       <button
-    //         onClick={() => window.history.back()}
-    //         className="text-indigo-600 hover:text-indigo-800 flex items-center gap-2 text-lg"
-    //       >
-    //         <X className="w-5 h-5" /> Quay lại
-    //       </button>
-    //     </div>
-    //     <div className="flex justify-end">
-    //       <button
-    //         onClick={toggleFavorite}
-    //         className={`p-2 rounded-full shadow hover:bg-gray-100 ${
-    //           isFavorite ? "text-red-500" : "text-gray-600"
-    //         }`}
-    //       >
-    //         <Heart className="h-6 w-6" />
-    //       </button>
-    //     </div>
-    //     {/* Book Image and Details */}
-    //     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-    //       <div className="space-y-6">
-    //         {/* Book Image */}
-    //         <div className="aspect-[3/4] rounded-lg overflow-hidden">
-    //           <img
-    //             src={
-    //               book.categories?.[0]?.image_url || "path/to/default-image.jpg"
-    //             }
-    //             alt={book.title}
-    //             className="w-full h-full object-cover"
-    //           />
-    //         </div>
-
-    //         {/* Additional Book Info */}
-    //         <div className="grid grid-cols-3 gap-4">
-    //           <div className="bg-indigo-50 p-4 rounded-lg text-center">
-    //             <BookOpen className="h-6 w-6 text-indigo-600 mx-auto mb-2" />
-    //             <p className="text-sm text-gray-600">
-    //               {book.description || "No description available"}
-    //             </p>
-    //           </div>
-    //           <div className="bg-indigo-50 p-4 rounded-lg text-center">
-    //             <Clock className="h-6 w-6 text-indigo-600 mx-auto mb-2" />
-    //             <p className="text-sm text-gray-600">6-8 giờ đọc</p>
-    //           </div>
-    //           <div className="bg-indigo-50 p-4 rounded-lg text-center">
-    //             <Award className="h-6 w-6 text-indigo-600 mx-auto mb-2" />
-    //             <p className="text-sm text-gray-600">Bestseller</p>
-    //           </div>
-    //         </div>
-    //       </div>
-
-    //       {/* Right Side: Book Info */}
-    //       <div className="space-y-6">
-    //         <div className="flex items-center justify-between">
-    //           <span className="text-sm text-indigo-600 font-medium">
-    //             {book.categories?.[0]?.name}
-    //           </span>
-    //           <div className="flex items-center">
-    //             <div className="flex">
-    //               {[1, 2, 3, 4, 5].map((star) => (
-    //                 <Star
-    //                   key={star}
-    //                   className="h-5 w-5 text-yellow-400 fill-current"
-    //                 />
-    //               ))}
-    //             </div>
-    //             <span className="ml-2 text-sm text-gray-600">
-    //               (150 đánh giá)
-    //             </span>
-    //           </div>
-    //         </div>
-    //         <p className="text-lg text-gray-600">
-    //           Tác giả: {book.author?.name}
-    //         </p>
-    //         <h3 className="text-xl font-semibold">Giới thiệu sách</h3>
-    //         <p className="text-gray-600 leading-relaxed">
-    //           {book.description || "No description available for this book."}
-    //         </p>
-
-    //         {/* Book Details */}
-    //         <div className="mt-8">
-    //           <h3 className="text-xl font-semibold">Thông tin chi tiết</h3>
-    //           <div className="grid grid-cols-2 gap-6 mt-4">
-    //             <div>
-    //               <p className="text-sm text-gray-600">Nhà xuất bản</p>
-    //               <p className="font-medium">{book.publisher || "NXB Trẻ"}</p>
-    //             </div>
-    //             <div>
-    //               <p className="text-sm text-gray-600">Năm xuất bản</p>
-    //               <p className="font-medium">{book.publish_year || "2024"}</p>
-    //             </div>
-    //             <div>
-    //               <p className="text-sm text-gray-600">Số trang</p>
-    //               <p className="font-medium">{book.pages || "300"}</p>
-    //             </div>
-    //             <div>
-    //               <p className="text-sm text-gray-600">Ngôn ngữ</p>
-    //               <p className="font-medium">{book.language || "Tiếng Việt"}</p>
-    //             </div>
-    //           </div>
-    //         </div>
-    //       </div>
-    //     </div>
-
-    //     {/* Purchase Section */}
-    //     <div className="mt-12 border-t pt-8">
-    //       <div className="flex items-center justify-between">
-    //         <div>
-    //           <p className="text-3xl font-bold text-indigo-600">
-    //             {book.price} VND
-    //           </p>
-    //           <p className="text-sm text-gray-600">Đã bao gồm thuế</p>
-    //         </div>
-    //         <button className="bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition-colors">
-    //           Thêm vào giỏ hàng
-    //         </button>
-    //       </div>
-    //     </div>
-    //   </div>
-
-    //   {/* Favorite Button */}
-    // </div>
   );
 }

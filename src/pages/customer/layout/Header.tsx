@@ -1,21 +1,26 @@
-import React, { useState } from 'react';
-import { BookOpen, Search, Heart, ShoppingCart, ChevronDown } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  BookOpen,
+  Search,
+  Heart,
+  ShoppingCart,
+  ChevronDown,
+} from "lucide-react";
 
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 
 export function Header() {
+  const navigate = useNavigate();
 
-  const navigate = useNavigate(); 
+  const token = localStorage.getItem("token");
+  const username = JSON.parse(localStorage.getItem("user") || "{}")?.username;
 
-  const token = localStorage.getItem('token'); 
-  const username = JSON.parse(localStorage.getItem('user') || '{}')?.username;
-
-  const [isDropdownOpen, setDropdownOpen] = useState(false);  // State to handle dropdown visibility
+  const [isDropdownOpen, setDropdownOpen] = useState(false); // State to handle dropdown visibility
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   return (
@@ -24,14 +29,33 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           <div onClick={() => navigate("/")} className="flex items-center">
             <BookOpen className="h-8 w-8 text-indigo-600" />
-            <span className="ml-2 text-xl font-bold text-gray-900">BookHaven</span>
+            <span className="ml-2 text-xl font-bold text-gray-900">
+              BookHaven
+            </span>
           </div>
-          
+
           <nav className="hidden md:flex space-x-8">
-            <a href="#home" className="text-gray-700 hover:text-indigo-600">Trang chủ</a>
-            <a href="#about" className="text-gray-700 hover:text-indigo-600">Về chúng tôi</a>
-            <Link to="/book/list" className="text-gray-700 hover:text-indigo-600">Sách</Link>
-            <a href="#contact" className="text-gray-700 hover:text-indigo-600">Liên hệ</a>
+            <Link to="/" className="text-gray-700 hover:text-indigo-600">
+              Trang chủ
+            </Link>
+            <Link
+              to="/about-us"
+              className="text-gray-700 hover:text-indigo-600"
+            >
+              Về chúng tôi
+            </Link>
+            <Link
+              to="/book/list"
+              className="text-gray-700 hover:text-indigo-600"
+            >
+              Sách
+            </Link>
+            <Link
+              to="/contact-us"
+              className="text-gray-700 hover:text-indigo-600"
+            >
+              Liên hệ
+            </Link>
           </nav>
 
           <div className="hidden md:block">
@@ -46,45 +70,35 @@ export function Header() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <button 
+            <button
               className="p-2 hover:bg-gray-100 rounded-full relative"
-              onClick={() => {navigate("/favorites")}}
+              onClick={() => {
+                navigate("/favorites");
+              }}
             >
-    <Heart className="h-6 w-6 text-gray-600" />
-
-              {/* <Heart className="h-6 w-6 text-gray-600" />
-              {wishlistItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                  {wishlistItems.length}
-                </span>
-              )} */}
+              <Heart className="h-6 w-6 text-gray-600" />
             </button>
-            <button 
-            onClick={() => navigate("/cart")}
+            <button
+              onClick={() => navigate("/cart")}
               className="p-2 hover:bg-gray-100 rounded-full relative"
             >
               <ShoppingCart className="h-6 w-6 text-gray-600" />
-              {/* {cartItems.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                  {cartItems.length}
-                </span>
-              )} */}
             </button>
 
-            {token ? (  // Check if user is logged in
+            {token ? ( 
               <div className="relative">
                 <div
-                  onClick={() => setDropdownOpen(!isDropdownOpen)}  // Toggle dropdown visibility
+                  onClick={() => setDropdownOpen(!isDropdownOpen)} 
                   className="flex hover-cursor"
                 >
-                  {username} 
+                  {username}
                 </div>
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-10">
                     <ul className="py-1 text-gray-700">
                       <li>
                         <button
-                          onClick={() => navigate('/profile')}
+                          onClick={() => navigate("/profile")}
                           className="block px-4 py-2 text-sm hover:bg-gray-100 w-full text-left"
                         >
                           Profile
@@ -92,7 +106,7 @@ export function Header() {
                       </li>
                       <li>
                         <button
-                          onClick={() => navigate('/transactions')}
+                          onClick={() => navigate("/transactions")}
                           className="block px-4 py-2 text-sm hover:bg-gray-100 w-full text-left"
                         >
                           Transactions
@@ -111,7 +125,7 @@ export function Header() {
                 )}
               </div>
             ) : (
-              <button 
+              <button
                 onClick={() => navigate("/login")} // Dùng useNavigate để chuyển hướng
                 className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
               >

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import useBooksQuery from '../../queries/BookQuery';
 import { BookCard } from './components/BookCard';
+import axiosInstance from '../../utils/axiosConfig';
 
 const BookList: React.FC = () => {
   const navigate = useNavigate();
@@ -15,8 +16,8 @@ const BookList: React.FC = () => {
   const allCategories = useMemo(() => {
     if (!data?.books) return [];
     const categories = new Set<string>();
-    data.books.forEach(book => {
-      book.categories.forEach(cat => categories.add(cat.name));
+    data.books.forEach((book: any) => {
+      book.categories.forEach((cat: any) => categories.add(cat.name));
     });
     return Array.from(categories);
   }, [data?.books]);
@@ -24,29 +25,16 @@ const BookList: React.FC = () => {
   // Filter books
   const filteredBooks = useMemo(() => {
     if (!data?.books) return [];
-    return data.books.filter(book => {
+    return data.books.filter((book: any) => {
       const matchesPrice = book.price >= priceRange[0] && book.price <= priceRange[1];
       const matchesCategory = selectedCategories.length === 0 || 
-        book.categories.some(cat => selectedCategories.includes(cat.name));
+        book.categories.some((cat: any) => selectedCategories.includes(cat.name));
       const matchesSearch = book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         book.author.name.toLowerCase().includes(searchQuery.toLowerCase());
       
       return matchesPrice && matchesCategory && matchesSearch;
     });
   }, [data?.books, priceRange, selectedCategories, searchQuery]);
-
-  const handleAddToCart = async (bookId: number) => {
-    try {
-      await axios.post(`http://localhost:8080/purchases/${bookId}`);
-      alert('Book added to cart successfully!');
-    } catch (error) {
-      alert('Failed to add book to cart');
-    }
-  };
-
-  const handleViewDetails = (bookId: number) => {
-    navigate(`/book/detail/${bookId}`);
-  };
 
   if (isLoading) {
     return (
@@ -132,7 +120,7 @@ const BookList: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredBooks.map((book) => (
+          {filteredBooks.map((book: any) => (
             <BookCard 
                 refetch={refetch}
                 key={book.id}

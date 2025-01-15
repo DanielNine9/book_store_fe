@@ -16,3 +16,8 @@ export const fetchAllTransaction = async (page: number, limit: number, search: s
       console.error('Error fetching users:', error);
     }
   };
+
+  export async function fetchTransactions(limit: number = 10): Promise<any[]> {
+    const response = await axiosInstance.get(`/transactions/?limit=${limit}`);
+    return response.data;
+}

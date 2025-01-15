@@ -37,7 +37,14 @@ export function BookCard({ book, onViewDetail, refetch }: BookCardProps) {
           },
         });
         setFavoriteId(0);
-        toast.success("Đã xóa khỏi danh sách yêu thích");
+   
+         toast.custom((t) => (
+                  <CustomToast
+                    t={t}
+                    message={`Đã xóa khỏi danh sách yêu thích`}
+                    type="success"
+                  />
+                ));
       } else {
         const response = await axiosInstance.post(
           "/favorites/",
@@ -50,7 +57,13 @@ export function BookCard({ book, onViewDetail, refetch }: BookCardProps) {
           }
         );
         setFavoriteId(response.data.favorite);
-        toast.success("Đã thêm vào danh sách yêu thích");
+        toast.custom((t) => (
+          <CustomToast
+            t={t}
+            message={"Đã thêm vào danh sách yêu thích"}
+            type="success"
+          />
+        ));
       }
       await refetch();
     } catch (error) {

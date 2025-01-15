@@ -14,7 +14,6 @@ export const fetchBooks = async (
     const response = await axiosInstance.get("/books/", {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       params: {
         page,

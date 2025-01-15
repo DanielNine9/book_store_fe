@@ -8,6 +8,7 @@ import { Header } from "./layout/Header";
 import { CartPage } from "./Cart";
 import BookList from "./BookList";
 import NotFound from "../NotFound";
+import TransactionList from "./Transactions";
 
 const CustomerRoute = () => {
   return (
@@ -18,6 +19,7 @@ const CustomerRoute = () => {
         <Route path="/favorites" element={<FavoriteBooks />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/book/list" element={<BookList />} />
+        <Route path="/transactions" element={<TransactionList />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>

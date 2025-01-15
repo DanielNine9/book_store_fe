@@ -49,14 +49,14 @@ const ContactUs = (props: Props) => {
                         <Phone className="h-6 w-6 text-indigo-600 mt-1" />
                         <div className="ml-4">
                           <h4 className="font-medium">Điện thoại</h4>
-                          <p className="text-gray-600">1900 1234</p>
+                          <p className="text-gray-600">0944242140</p>
                         </div>
                       </div>
                       <div className="flex items-start">
                         <Mail className="h-6 w-6 text-indigo-600 mt-1" />
                         <div className="ml-4">
                           <h4 className="font-medium">Email</h4>
-                          <p className="text-gray-600">contact@bookhaven.com</p>
+                          <p className="text-gray-600">dqh20317@gmail.com</p>
                         </div>
                       </div>
                     </div>

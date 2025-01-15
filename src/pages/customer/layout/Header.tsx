@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Search, Heart, ShoppingCart, ChevronDown } from 'lucide-react';
 
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 
 export function Header() {
 
@@ -30,7 +30,7 @@ export function Header() {
           <nav className="hidden md:flex space-x-8">
             <a href="#home" className="text-gray-700 hover:text-indigo-600">Trang chủ</a>
             <a href="#about" className="text-gray-700 hover:text-indigo-600">Về chúng tôi</a>
-            <a href="#books" className="text-gray-700 hover:text-indigo-600">Sách</a>
+            <Link to="/book/list" className="text-gray-700 hover:text-indigo-600">Sách</Link>
             <a href="#contact" className="text-gray-700 hover:text-indigo-600">Liên hệ</a>
           </nav>
 
@@ -60,6 +60,7 @@ export function Header() {
               )} */}
             </button>
             <button 
+            onClick={() => navigate("/cart")}
               className="p-2 hover:bg-gray-100 rounded-full relative"
             >
               <ShoppingCart className="h-6 w-6 text-gray-600" />

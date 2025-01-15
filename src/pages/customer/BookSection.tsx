@@ -1,21 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import useBooksQuery from '../../queries/BookQuery';
-import { useNavigate } from 'react-router-dom';
-import { BookCard } from './components/BookCard';
+import React, { useState, useEffect } from "react";
+import useBooksQuery from "../../queries/BookQuery";
+import { useNavigate } from "react-router-dom";
+import { BookCard } from "./components/BookCard";
 
 const BookSection = () => {
   const [books, setBooks] = useState([]);
-  const [priceRange, setPriceRange] = useState('all');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
-  const  navigate = useNavigate()
+  const [priceRange, setPriceRange] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
+  const navigate = useNavigate();
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
 
-  const { data, isLoading, error, refetch } = useBooksQuery(
-    1,
-    10000 ,
-  );
+  const { data, isLoading, error, refetch } = useBooksQuery(1, 10000);
 
   const openDetail = (book) => {
     setSelectedBook(book);
@@ -56,18 +53,20 @@ const BookSection = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {data?.books && data?.books.length > 0 && data.books?.map((book) => (
-            <BookCard
-            refetch={refetch}
-              key={book.id} 
-              book={book} 
-              onViewDetail={() => {navigate(`/book/detail/${book.id}`)}} // Open modal on card click
-            />
-          ))}
+          {data?.books &&
+            data?.books.length > 0 &&
+            data.books?.map((book) => (
+              <BookCard
+                refetch={refetch}
+                key={book.id}
+                book={book}
+                onViewDetail={() => {
+                  navigate(`/book/detail/${book.id}`);
+                }} // Open modal on card click
+              />
+            ))}
         </div>
       </div>
-
-     
     </div>
   );
 };

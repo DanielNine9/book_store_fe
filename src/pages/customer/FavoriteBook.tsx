@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Heart, X, Loader2, BookOpen, User, Calendar, Box } from 'lucide-react';
 import axiosInstance from '../../utils/axiosConfig';
 import { Link } from 'react-router-dom';
+import { CustomToast } from '../../components/Toast';
+import toast from 'react-hot-toast';
 
 export function FavoriteBooks() {
   const [favoriteBooks, setFavoriteBooks] = useState<any[]>([]);
@@ -90,6 +92,34 @@ export function FavoriteBooks() {
       </div>
     );
   }
+
+ 
+  const handleAddToCart = async (book: any) => {
+    try {
+      const response = await axiosInstance.post(`/purchases/${book.ID}`, {
+        quantity: 1
+      });
+      
+      if (response.status === 200 || response.status === 201) {
+        toast.custom((t) => (
+          <CustomToast
+            t={t}
+            message={`Đã thêm "${book.title}" vào giỏ hàng`}
+            type="success"
+          />
+        ));
+      }
+    } catch (error) {
+      toast.custom((t) => (
+        <CustomToast
+          t={t}
+          message="Không thể thêm vào giỏ hàng. Vui lòng thử lại!"
+          type="error"
+        />
+      ));
+      console.error("Error:", error);
+    } 
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -188,12 +218,12 @@ export function FavoriteBooks() {
                     >
                       Xem chi tiết →
                     </Link>
-                    <Link
-                      to={`/cart`}
+                    <button
+                      onClick={() => handleAddToCart(favorite.book)}
                       className="inline-flex items-center px-3 py-1.5 border border-indigo-600 rounded-md text-sm font-medium text-indigo-600 hover:bg-indigo-50"
                     >
                       Thêm vào giỏ
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </div>

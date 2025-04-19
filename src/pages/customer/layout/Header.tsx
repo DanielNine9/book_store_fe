@@ -109,7 +109,7 @@ export function Header() {
                           onClick={() => navigate("/transactions")}
                           className="block px-4 py-2 text-sm hover:bg-gray-100 w-full text-left"
                         >
-                          Transactions
+                          Giao dịch
                         </button>
                       </li>
                       <li>

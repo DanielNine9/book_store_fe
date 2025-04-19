@@ -130,11 +130,11 @@ export function BookCard({ book, onViewDetail, refetch }: BookCardProps) {
           </div>
         )}
         
-        {book.quantity_in_stock === 0 && (
+        {/* {book.quantity_in_stock === 0 && (
           <div className="absolute top-3 left-3 px-2 py-1 bg-red-500 text-white text-xs font-medium rounded-full">
             Hết hàng
           </div>
-        )}
+        )} */}
       </div>
 
       <div className="p-5">

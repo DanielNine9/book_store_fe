@@ -15,7 +15,7 @@ export function BookCard({ book, onViewDetail, refetch }: BookCardProps) {
   const [favoriteId, setFavoriteId] = useState<number>(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const bookImage = book.images?.[0]?.url || "https://via.placeholder.com/400x500";
+  const bookImage = book.images?.[0]?.url || "https://m.media-amazon.com/images/I/61tRqW4SM1L.jpg";
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -176,7 +176,7 @@ export function BookCard({ book, onViewDetail, refetch }: BookCardProps) {
               <BookOpen className="h-5 w-5" />
             </button>
 
-            <button
+            {/* <button
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white transition-all duration-200
                 ${book.quantity_in_stock === 0 
                   ? "bg-gray-400 cursor-not-allowed" 
@@ -186,7 +186,7 @@ export function BookCard({ book, onViewDetail, refetch }: BookCardProps) {
             >
               <ShoppingCart className={`h-5 w-5 ${isAddingToCart ? "animate-bounce" : ""}`} />
               {isAddingToCart ? "..." : ""}
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

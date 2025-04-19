@@ -141,7 +141,6 @@ export function AddBookForm({ onSubmit, onClose, book }: AddBookFormProps) {
 
   const onFormSubmit = (e: any) => {
     const data = getValues();
-    alert("onFormSubmit")
     onSubmit(e, {
       ...data,
       categories: data?.category?.map((item: any) => item.ID),

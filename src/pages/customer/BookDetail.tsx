@@ -154,7 +154,7 @@ export function BookDetail() {
             {/* Main Image */}
             <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-lg">
               <img
-                src={book?.images?.[currentImageIndex]?.url || "https://via.placeholder.com/600x800"}
+                src={book?.images?.[currentImageIndex]?.url || "https://m.media-amazon.com/images/I/61tRqW4SM1L.jpg"}
                 alt={book.title}
                 className="w-full h-full object-cover"
               />
